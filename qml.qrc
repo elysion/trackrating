@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>database.js</file>
+        <file>TrackList.qml</file>
+        <file>PlayerButton.qml</file>
+        <file>TrackComparison.qml</file>
+        <file>TrackPlayer.qml</file>
+        <file>ComparisonView.qml</file>
+        <file>LessButton.qml</file>
+        <file>MoreButton.qml</file>
+    </qresource>
+</RCC>
