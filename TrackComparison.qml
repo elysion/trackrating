@@ -11,84 +11,39 @@ Item {
     id: grid
 
     signal trackClicked(variant track)
+    signal trackRated(variant track, bool isMoreThan, variant comparison)
 
     property string comparisonTerm
     property alias tracks: repeater.model
+
+    onTracksChanged: {
+        comparedTrack = tracks[1]
+    }
+
+    property variant comparedTrack
     property real cellWidth: {
         var proposedWidth = width / tracks.length
         return proposedWidth < height ? proposedWidth : height
     }
+    property string currentTrackLocation
 
     Row {
         anchors.centerIn: parent
+        spacing: 50
 
         Repeater {
             id: repeater
 
-            delegate: Item {
-                width: grid.cellWidth
-                height: width
+            delegate: ComparisonTrackItem {
+                id: comparisonTrackItem
+                sideBarVisible: index == 0
+                cellWidth: grid.cellWidth
+                comparisonTerm: grid.comparisonTerm
+                playing: grid.currentTrackLocation === modelData.Location
 
-                Image {
-                    id: cover
-
-                    width: parent.width * 0.8
-                    height: width
-                    source: "image://cover/" + modelData.Location
-
-                    anchors.centerIn: parent
-
-                    Text {
-                        property variant info: trackInfoProvider.getTrackInfo(modelData.Location)
-
-                        anchors {
-                            top: parent.bottom
-                            topMargin: 10
-                            horizontalCenter: parent.horizontalCenter
-                        }
-
-                        text: info.artist + " - " + info.title
-                    }
-
-                    LessButton {
-                        anchors {
-                            horizontalCenter: parent.horizontalCenter
-                            bottom: parent.bottom
-                            bottomMargin: 10
-                        }
-
-                        term: grid.comparisonTerm
-                    }
-
-                    MoreButton {
-                        anchors {
-                            horizontalCenter: parent.horizontalCenter
-                            top: parent.top
-                            topMargin: 10
-                        }
-
-                        term: grid.comparisonTerm
-                    }
-
-                    PlayerButton {
-                        anchors.centerIn: parent
-
-                        width: 75
-                        height: 75
-
-                        source: "qrc:/images/play.svg"
-
-                        onClicked: grid.trackClicked(modelData)
-                    }
-                }
-
-                DropShadow {
-                    anchors.fill: cover
-                    radius: 10
-                    samples: radius * 2
-                    source: cover
-                    color: Qt.rgba(0, 0, 0, 0.5)
-                    transparentBorder: true
+                onClicked: grid.trackClicked(track)
+                onRated: {
+                    grid.trackRated(track, isMoreThan, grid.comparedTrack)
                 }
             }
         }

@@ -5,5 +5,7 @@
         <file>fwd.svg</file>
         <file>down.svg</file>
         <file>up.svg</file>
+        <file>equal.svg</file>
+        <file>spinner.svg</file>
     </qresource>
 </RCC>

@@ -19,33 +19,45 @@ Item {
 
     function contains(object, value) {
         for (var key in object) {
-            if (object[key] === object) return true
+            if (object[key] === value) return true
         }
 
         return false
     }
 
+    function startComparison(unrated, category) {
+        var trackId = unrated.TrackId
+        var categoryId = category.CategoryId
+
+        Database.resetRating(trackId, categoryId)
+        Database.ensureRatingExists(trackId, categoryId)
+
+        Database.initiateCategoryRating(trackId, categoryId, function() {
+            compare(unrated, category)
+        })
+    }
+
     function compare(unrated, category) {
         root.category = category
-        console.log(category.Name, category.Id)
 
-        Database.getRatedTracksFor(category.Id, function(rated) {
-            if (contains(rated, unrated)) {
-                console.log("Already rated!")
-                return
-            }
+        var categoryId = category.CategoryId
+        var unratedTrackId = unrated.TrackId
 
-            if (rated.length !== 0) {
-                setGridTracks(unrated, rated[Math.floor(rated.length / 2)])
-            } else {
-                Database.getUnratedTracksFor(category.Id, function(tracks) {
-                    // TODO: get next/previous track if tracks[Math.floor(tracks.length/2)] is @unrated
-                    setGridTracks(unrated, tracks[Math.floor(tracks.length/2)])
+        Database.getNextComparisonId(unrated.TrackId, null, category.CategoryId, function(nextId) {
+            if (nextId === null) {
+                // TODO: unrated.TrackId not needed?
+                Database.getUnratedTracksFor(categoryId, unrated.TrackId, function(tracks) {
+                    var comparison = tracks[Math.floor(tracks.length/2)]
+                    setGridTracks(unrated, comparison)
                 })
-            }
+            } else {
+                Database.getTrackInfo(nextId, function(next) {
+                    setGridTracks(unrated, next)
+                })
 
-            function setGridTracks(unrated, rated) {
-                grid.tracks = [unrated, rated]
+                function setGridTracks(unrated, rated) {
+                    grid.tracks = [unrated, rated]
+                }
             }
         })
     }
@@ -65,6 +77,7 @@ Item {
         id: grid
 
         comparisonTerm: root.category.Name
+        currentTrackLocation: player.source
 
         anchors {
             top: parent.top
@@ -74,6 +87,30 @@ Item {
         }
 
         onTrackClicked: player.play(track.Location)
+        onTrackRated: {
+            var categoryId = root.category.CategoryId
+            var comparisonId = comparison.TrackId
+            var trackId = track.TrackId
+
+            Database.rateTrack(trackId, isMoreThan, comparisonId, categoryId)
+
+            Database.getNextComparisonId(trackId, comparisonId, categoryId, function(nextComparison) {
+                if (!nextComparison) {
+                    if (isMoreThan) {
+                        Database.rateTrackAbove(trackId, comparisonId, categoryId)
+                    } else {
+                        Database.rateTrackBelow(trackId, comparisonId, categoryId)
+                    }
+                    // TODO: remove trackId as it is not really used
+                    Database.getUnratedTracksFor(categoryId, trackId, function(unrated) {
+                        var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))
+                        startComparison(nextTrackForComparison, category)
+                    })
+                } else {
+                    compare(track, root.category)
+                }
+            })
+        }
     }
     
     TrackPlayer {

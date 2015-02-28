@@ -10,6 +10,8 @@ import "database.js" as Database
 Item {
     id: root
 
+    property alias source: player.source
+
     function toggle() {
         if (player.playbackState === Audio.PlayingState)
             player.pause()

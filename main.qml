@@ -46,7 +46,11 @@ ApplicationWindow {
             }
             MenuItem {
                 text: qsTr("Clear database")
-                onTriggered: Database.clearDatabase()
+                onTriggered: {
+                    Database.clearDatabase()
+                    categoryCheckBox.refresh()
+                    trackListModel.refresh()
+                }
             }
             MenuItem {
                 text: qsTr("Add category")
@@ -128,6 +132,10 @@ ApplicationWindow {
             clear()
 
             for (var i = 0; i < results.length; ++i) {
+                var item = results.item(i)
+                for (var key in item) {
+                    console.log(key, item[key])
+                }
                 append(results.item(i))
             }
         }
@@ -164,7 +172,7 @@ ApplicationWindow {
                         if (category === undefined) return
 
                         var func = ratedCheckBox.currentIndex === 1 ? Database.getRatedTracksFor : Database.getUnratedTracksFor
-                        func(category.Id, function(tracks) {
+                        func(category.CategoryId, function(tracks) {
                             trackListModel.showTracksFromDbResults(tracks)
                         })
                     }
@@ -188,7 +196,7 @@ ApplicationWindow {
 
                             Database.getCategories(function(categories) {
                                 for (var i = 0; i < categories.length; ++i) {
-                                    categoryCheckBox.model.append({text: categories.item(i).Name, Name: categories.item(i).Name, Id: categories.item(i).Id})
+                                    categoryCheckBox.model.append({text: categories.item(i).Name, Name: categories.item(i).Name, CategoryId: categories.item(i).CategoryId})
                                 }
                             })
                         }
@@ -238,7 +246,7 @@ ApplicationWindow {
                     if (ratedCheckBox.currentIndex === 1) return
 
                     rateTab.play(model.get(row).Location)
-                    rateTab.compare(model.get(row), categoryCheckBox.getCurrentCategory())
+                    rateTab.startComparison(model.get(row), categoryCheckBox.getCurrentCategory())
 
                     tabs.activeTab = 1
                 }

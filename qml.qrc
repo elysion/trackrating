@@ -7,7 +7,7 @@
         <file>TrackComparison.qml</file>
         <file>TrackPlayer.qml</file>
         <file>ComparisonView.qml</file>
-        <file>LessButton.qml</file>
-        <file>MoreButton.qml</file>
+        <file>ImageButton.qml</file>
+        <file>ComparisonTrackItem.qml</file>
     </qresource>
 </RCC>
