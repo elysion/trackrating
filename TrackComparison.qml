@@ -25,7 +25,9 @@ Item {
         var proposedWidth = width / tracks.length
         return proposedWidth < height ? proposedWidth : height
     }
+
     property string currentTrackLocation
+    property bool playing
 
     Row {
         anchors.centerIn: parent
@@ -39,7 +41,7 @@ Item {
                 sideBarVisible: index == 0
                 cellWidth: grid.cellWidth
                 comparisonTerm: grid.comparisonTerm
-                playing: grid.currentTrackLocation === modelData.Location
+                playing: grid.currentTrackLocation === modelData.Location && root.playing
 
                 onClicked: grid.trackClicked(track)
                 onRated: {

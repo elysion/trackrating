@@ -11,9 +11,10 @@ Item {
     id: root
 
     property alias source: player.source
+    property bool playing: player.playbackState === Audio.PlayingState
 
     function toggle() {
-        if (player.playbackState === Audio.PlayingState)
+        if (root.playing)
             player.pause()
         else player.play()
     }
@@ -34,7 +35,7 @@ Item {
     Image {
         id: bgWaveform
         
-        opacity: player.playbackState === Audio.PlayingState ? 0.5 : 0.25
+        opacity: root.playing ? 0.5 : 0.25
         source: "image://waveform/"+player.source
         smooth: false
         

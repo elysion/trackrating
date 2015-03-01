@@ -15,6 +15,8 @@ Item {
     signal trackClicked(variant track)
     signal comparingTracks(variant unrated, variant rated)
 
+    property bool playing
+
     property variant category
     property string currentTrackLocation
 
@@ -82,6 +84,7 @@ Item {
 
         comparisonTerm: root.category.Name
         currentTrackLocation: root.currentTrackLocation
+        playing: root.playing
 
         anchors {
             top: header.top

@@ -306,6 +306,7 @@ ApplicationWindow {
             anchors.fill: parent
             visible: tabs.activeTab === 1
             currentTrackLocation: player.source
+            playing: player.playing
 
             onAllTracksRated: {
                 optionsRow.updateList()
