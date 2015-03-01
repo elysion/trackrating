@@ -149,6 +149,12 @@ ApplicationWindow {
 
         property int activeTab: 0
 
+        onActiveTabChanged: {
+            if (activeTab === 0) {
+                trackListModel.refresh()
+            }
+        }
+
         Item {
             anchors.fill: parent
             visible: tabs.activeTab === 0
