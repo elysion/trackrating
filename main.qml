@@ -24,7 +24,6 @@ ApplicationWindow {
     }
 
     function addTracks(urls) {
-        player.play(urls[0])
         urls.forEach(function(file) {
             var trackInfo = trackInfoProvider.getTrackInfo(file);
             Database.addOrReplaceTrack(trackInfo.artist, trackInfo.title, file)
