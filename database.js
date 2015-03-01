@@ -62,7 +62,7 @@ function getCategories(callback) {
 function getRatedTracksFor(categoryId, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT TRACKS.*, RATINGS.*, TRACKS.TrackId AS TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ?  AND RATINGS.MoreThanId IS NULL AND RATINGS.LessThanId IS NULL AND RATINGS.Rating IS NOT NULL", [categoryId])
+        var rs = tx.executeSql("SELECT TRACKS.*, RATINGS.*, TRACKS.TrackId AS TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ?  AND RATINGS.MoreThanId IS NULL AND RATINGS.LessThanId IS NULL AND RATINGS.Rating IS NOT NULL ORDER BY Rating DESC", [categoryId])
         callback(rs.rows)
     })
 }
