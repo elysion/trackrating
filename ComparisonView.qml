@@ -107,6 +107,7 @@ Item {
                     Database.getUnratedTracksFor(categoryId, trackId, function(unrated) {
                         if (unrated.length === 0) {
                             root.tracksRated()
+                            notification.show("All tracks rated in terms of \"" + category.Name + "\"")
                         } else {
                             var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))
                             startComparison(nextTrackForComparison, category)
