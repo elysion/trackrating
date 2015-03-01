@@ -15,6 +15,13 @@ Item {
     signal trackClicked(variant track)
     signal comparingTracks(variant unrated, variant rated)
 
+    onComparingTracks: {
+        root.unrated = unrated
+        root.rated = rated
+    }
+
+    property variant unrated
+    property variant rated
     property bool playing
 
     property variant category
@@ -65,6 +72,36 @@ Item {
             }
         })
     }
+
+    function rateTrack(track, isMoreThan, comparison) {
+        var categoryId = root.category.CategoryId
+        var comparisonId = comparison.TrackId
+        var trackId = track.TrackId
+
+        Database.rateTrack(trackId, isMoreThan, comparisonId, categoryId)
+
+        Database.getNextComparisonId(trackId, comparisonId, categoryId, function(nextComparison) {
+            if (!nextComparison) {
+                if (isMoreThan) {
+                    Database.rateTrackAbove(trackId, comparisonId, categoryId)
+                } else {
+                    Database.rateTrackBelow(trackId, comparisonId, categoryId)
+                }
+                // TODO: remove trackId as it is not really used
+                Database.getUnratedTracksFor(categoryId, trackId, function(unrated) {
+                    if (unrated.length === 0) {
+                        root.allTracksRated()
+                        notification.show("All tracks rated in terms of \"" + category.Name + "\"")
+                    } else {
+                        var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))
+                        startComparison(nextTrackForComparison, category)
+                    }
+                })
+            } else {
+                compare(track, root.category)
+            }
+        })
+    }
     
     Text {
         id: header
@@ -94,34 +131,6 @@ Item {
         }
 
         onTrackClicked: root.trackClicked(track)
-        onTrackRated: {
-            var categoryId = root.category.CategoryId
-            var comparisonId = comparison.TrackId
-            var trackId = track.TrackId
-
-            Database.rateTrack(trackId, isMoreThan, comparisonId, categoryId)
-
-            Database.getNextComparisonId(trackId, comparisonId, categoryId, function(nextComparison) {
-                if (!nextComparison) {
-                    if (isMoreThan) {
-                        Database.rateTrackAbove(trackId, comparisonId, categoryId)
-                    } else {
-                        Database.rateTrackBelow(trackId, comparisonId, categoryId)
-                    }
-                    // TODO: remove trackId as it is not really used
-                    Database.getUnratedTracksFor(categoryId, trackId, function(unrated) {
-                        if (unrated.length === 0) {
-                            root.allTracksRated()
-                            notification.show("All tracks rated in terms of \"" + category.Name + "\"")
-                        } else {
-                            var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))
-                            startComparison(nextTrackForComparison, category)
-                        }
-                    })
-                } else {
-                    compare(track, root.category)
-                }
-            })
-        }
+        onTrackRated: rateTrack(track, isMoreThan, comparison)
     }   
 }

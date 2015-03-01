@@ -339,6 +339,14 @@ ApplicationWindow {
             Keys.onRightPressed: {
                 player.seekForward()
             }
+
+            Keys.onUpPressed: {
+                rateTrack(unrated, true, rated)
+            }
+
+            Keys.onDownPressed: {
+                rateTrack(unrated, false, rated)
+            }
         }
 
         Row {
