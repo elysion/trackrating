@@ -33,6 +33,8 @@ Item {
             right: parent.right
         }
 
+        selectionMode: SelectionMode.ExtendedSelection
+
         TableViewColumn { role: "Artist"; title: "Artist" ; width: 100 }
         TableViewColumn { role: "Title"; title: "Title" ; width: 200 }
 
