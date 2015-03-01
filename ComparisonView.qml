@@ -11,7 +11,7 @@ Item {
     id: root
     anchors.fill: parent
 
-    signal tracksRated
+    signal allTracksRated
     signal trackClicked(variant track)
 
     property variant category
@@ -106,7 +106,7 @@ Item {
                     // TODO: remove trackId as it is not really used
                     Database.getUnratedTracksFor(categoryId, trackId, function(unrated) {
                         if (unrated.length === 0) {
-                            root.tracksRated()
+                            root.allTracksRated()
                             notification.show("All tracks rated in terms of \"" + category.Name + "\"")
                         } else {
                             var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))

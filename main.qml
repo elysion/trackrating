@@ -265,7 +265,7 @@ ApplicationWindow {
             visible: tabs.activeTab === 1
             currentTrackLocation: player.source
 
-            onTracksRated: {
+            onAllTracksRated: {
                 trackListModel.refresh()
                 tabs.activeTab = 0
             }
