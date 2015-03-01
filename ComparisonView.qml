@@ -13,6 +13,7 @@ Item {
 
     signal allTracksRated
     signal trackClicked(variant track)
+    signal comparingTracks(variant unrated, variant rated)
 
     property variant category
     property string currentTrackLocation
@@ -56,6 +57,7 @@ Item {
                 })
 
                 function setGridTracks(unrated, rated) {
+                    root.comparingTracks(unrated, rated)
                     grid.tracks = [unrated, rated]
                 }
             }

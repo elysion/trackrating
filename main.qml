@@ -271,6 +271,13 @@ ApplicationWindow {
             }
 
             onTrackClicked: player.play(track.Location)
+
+            onComparingTracks: {
+                if (player.source !== rated.Location &&
+                        player.source !== unrated.Location) {
+                    player.play(unrated.Location)
+                }
+            }
         }
 
         Row {
