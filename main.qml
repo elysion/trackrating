@@ -132,10 +132,6 @@ ApplicationWindow {
             clear()
 
             for (var i = 0; i < results.length; ++i) {
-                var item = results.item(i)
-                for (var key in item) {
-                    console.log(key, item[key])
-                }
                 append(results.item(i))
             }
         }
