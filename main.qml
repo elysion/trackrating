@@ -29,7 +29,7 @@ ApplicationWindow {
             Database.addOrReplaceTrack(trackInfo.artist, trackInfo.title, file)
         })
 
-        trackListModel.refresh()
+        optionsRow.updateList()
     }
 
     menuBar: MenuBar {
@@ -150,7 +150,7 @@ ApplicationWindow {
 
         onActiveTabChanged: {
             if (activeTab === 0) {
-                trackListModel.refresh()
+                optionsRow.updateList()
             }
         }
 
@@ -251,7 +251,7 @@ ApplicationWindow {
                 model: trackListModel
 
                 Component.onCompleted: {
-                    model.refresh()
+                    optionsRow.updateList()
                 }
 
                 onDoubleClicked: {
@@ -308,7 +308,7 @@ ApplicationWindow {
             currentTrackLocation: player.source
 
             onAllTracksRated: {
-                trackListModel.refresh()
+                optionsRow.updateList()
                 tabs.activeTab = 0
             }
 
