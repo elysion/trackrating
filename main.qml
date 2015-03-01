@@ -307,6 +307,17 @@ ApplicationWindow {
             Keys.onRightPressed: {
                 player.seekForward()
             }
+
+            Keys.onDeletePressed: {
+                var tracks = trackList.getSelectedTracks()
+
+                tracks.forEach(function(track) {
+                    Database.removeTrack(track.TrackId)
+                })
+
+                trackList.clearSelection()
+                optionsRow.updateList()
+            }
         }
 
         ComparisonView {

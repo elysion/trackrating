@@ -236,3 +236,13 @@ function resetRating(trackId, categoryId) {
         })
     })
 }
+
+function removeTrack(trackId) {
+    if (trackId) {
+        var db = getDatabase()
+        db.transaction(function(tx) {
+            tx.executeSql("DELETE FROM RATINGS WHERE TrackId=?", trackId)
+            tx.executeSql("DELETE FROM TRACKS WHERE TrackId=?", trackId)
+        })
+    }
+}

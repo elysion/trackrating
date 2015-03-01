@@ -18,6 +18,20 @@ Item {
         table.selection.select(table.rowAt(x, y))
     }
 
+    function getSelectedTracks() {
+        var tracks = []
+
+        table.selection.forEach(function(row) {
+            tracks.push(model.get(row))
+        })
+
+        return tracks
+    }
+
+    function clearSelection() {
+        table.selection.clear()
+    }
+
     Text {
         id: title
         text: "Unsorted tracks"
