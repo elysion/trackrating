@@ -70,7 +70,7 @@ function getRatedTracksFor(categoryId, callback) {
 function getUnratedTracksFor(categoryId, excludeTrackId, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT TRACKS.* FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS NOT ? AND TRACKS.TrackId IS NOT ? AND RATINGS.Rating IS NULL", [categoryId, excludeTrackId])
+        var rs = tx.executeSql("SELECT TRACKS.* FROM TRACKS WHERE TRACKS.TrackId IS NOT ? AND TRACKS.TrackId NOT IN (SELECT TRACKS.TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ? AND RATINGS.Rating IS NOT NULL)", [excludeTrackId, categoryId])
         callback(rs.rows)
     })
 }
