@@ -144,35 +144,32 @@ function getNextComparisonId(trackId, comparisonId, categoryId, callback) {
     var db = getDatabase()
 
     db.transaction(function(tx) {
-        // TODO use getTrackRating() instead
-        var trackResults = tx.executeSql("SELECT * FROM TRACKS LEFT OUTER JOIN RATINGS ON TRACKS.TrackId = RATINGS.TrackId WHERE TRACKS.TrackId = ?", [trackId])
+        var trackRating = getTrackRating(trackId, categoryId, function(track) {
+            if (!track) {
+                throw("Error fetching track rating information")
+            }
 
-        if (trackResults.rows.length !== 1) {
-            throw("Error fetching track information")
-        }
+            getTrackRating(track.LessThanId, categoryId, function(lessThanRating) {
+                getTrackRating(track.MoreThanId, categoryId, function(moreThanRating) {
+                    var lessThanStatement = lessThanRating !== undefined ? "AND RATINGS.Rating < " + lessThanRating.Rating : ""
+                    var moreThanStatement = moreThanRating !== undefined ? "AND RATINGS.Rating > " + moreThanRating.Rating : ""
 
-        var track = trackResults.rows.item(0)
+                    var tracksInBetween = tx.executeSql("SELECT TRACKS.TrackId FROM TRACKS LEFT JOIN RATINGS ON TRACKS.TrackId = RATINGS.TrackId "
+                                                        + "WHERE RATINGS.CategoryId = ? "
+                                                        + "AND RATINGS.LessThanId IS NULL "
+                                                        + "AND RATINGS.MoreThanId IS NULL "
+                                                        + "AND RATING IS NOT NULL "
+                                                        + "AND TRACKS.TrackId IS NOT ?"
+                                                        + lessThanStatement + " "
+                                                        + moreThanStatement,
+                                                        [categoryId, comparisonId])
 
-        getTrackRating(track.LessThanId, categoryId, function(lessThanRating) {
-            getTrackRating(track.MoreThanId, categoryId, function(moreThanRating) {
-                var lessThanStatement = lessThanRating !== undefined ? "AND RATINGS.Rating < " + lessThanRating : ""
-                var moreThanStatement = moreThanRating !== undefined ? "AND RATINGS.Rating > " + moreThanRating : ""
-
-                var tracksInBetween = tx.executeSql("SELECT TRACKS.TrackId FROM TRACKS LEFT JOIN RATINGS ON TRACKS.TrackId = RATINGS.TrackId "
-                                                    + "WHERE RATINGS.CategoryId = ? "
-                                                    + "AND RATINGS.LessThanId IS NULL "
-                                                    + "AND RATINGS.MoreThanId IS NULL "
-                                                    + "AND RATING IS NOT NULL "
-                                                    + "AND TRACKS.TrackId IS NOT ?"
-                                                    + lessThanStatement + " "
-                                                    + moreThanStatement,
-                                                    [categoryId, comparisonId])
-
-                if (tracksInBetween.rows.length === 0) {
-                    callback(null)
-                } else {
-                    callback(tracksInBetween.rows.item(Math.floor(tracksInBetween.rows.length/2)).TrackId)
-                }
+                    if (tracksInBetween.rows.length === 0) {
+                        callback(null)
+                    } else {
+                        callback(tracksInBetween.rows.item(Math.floor(tracksInBetween.rows.length/2)).TrackId)
+                    }
+                })
             })
         })
     })
