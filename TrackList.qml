@@ -8,6 +8,7 @@ Item {
     id: root
     property alias model: table.model
     signal doubleClicked(int row)
+    signal returnClicked
 
     function itemAt(x, y) {
         return model.get(table.rowAt(x, y))
@@ -53,5 +54,11 @@ Item {
         TableViewColumn { role: "Title"; title: "Title" ; width: 200 }
 
         onDoubleClicked: root.doubleClicked(row)
+
+        Keys.onReturnPressed: {
+            root.returnClicked()
+        }
+
+        focus: true
     }
 }

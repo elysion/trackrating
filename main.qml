@@ -259,6 +259,11 @@ ApplicationWindow {
                     player.play(model.get(row).Location)
                 }
 
+                onReturnClicked: {
+                    var tracks = trackList.getSelectedTracks()
+                    player.play(tracks[0].Location)
+                }
+
                 MouseArea {
                     id: contextMenuTrigger
 
