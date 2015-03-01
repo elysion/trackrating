@@ -347,6 +347,16 @@ ApplicationWindow {
             Keys.onDownPressed: {
                 rateTrack(unrated, false, rated)
             }
+
+            Keys.onTabPressed: {
+                console.log(player.source)
+                console.log(unrated.Location)
+                var unratedPlaying = player.source == unrated.Location
+
+                console.log("unratedPlaying", unratedPlaying)
+                player.source = unratedPlaying ? rated.Location : unrated.Location
+                player.play()
+            }
         }
 
         Row {
