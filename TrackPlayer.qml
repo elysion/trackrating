@@ -24,6 +24,18 @@ Item {
         player.play()
     }
 
+    function seekForward() {
+        seek(40000)
+    }
+
+    function seekBackward() {
+        seek(-40000)
+    }
+
+    function seek(deltaMs) {
+        player.seek(player.position + deltaMs)
+    }
+
     Audio {
         id: player
 

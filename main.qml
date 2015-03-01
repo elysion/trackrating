@@ -157,6 +157,7 @@ ApplicationWindow {
         Item {
             anchors.fill: parent
             visible: tabs.activeTab === 0
+            focus: visible
 
             RowLayout {
                 id: sortBar
@@ -298,6 +299,14 @@ ApplicationWindow {
                     }
                 }
             }
+
+            Keys.onLeftPressed: {
+                player.seekBackward()
+            }
+
+            Keys.onRightPressed: {
+                player.seekForward()
+            }
         }
 
         ComparisonView {
@@ -305,6 +314,7 @@ ApplicationWindow {
 
             anchors.fill: parent
             visible: tabs.activeTab === 1
+            focus: visible
             currentTrackLocation: player.source
             playing: player.playing
 
@@ -320,6 +330,14 @@ ApplicationWindow {
                         player.source !== unrated.Location) {
                     player.play(unrated.Location)
                 }
+            }
+
+            Keys.onLeftPressed: {
+                player.seekBackward()
+            }
+
+            Keys.onRightPressed: {
+                player.seekForward()
             }
         }
 
