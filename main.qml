@@ -171,10 +171,15 @@ ApplicationWindow {
                         var category = categoryCheckBox.getCurrentCategory()
                         if (category === undefined) return
 
-                        var func = ratedCheckBox.currentIndex === 1 ? Database.getRatedTracksFor : Database.getUnratedTracksFor
-                        func(category.CategoryId, function(tracks) {
+                        if (ratedCheckBox.currentIndex === 1) {
+                            Database.getRatedTracksFor(category.CategoryId, showTracks)
+                        } else {
+                            Database.getUnratedTracksFor(category.CategoryId, null, showTracks)
+                        }
+
+                        function showTracks(tracks) {
                             trackListModel.showTracksFromDbResults(tracks)
-                        })
+                        }
                     }
 
                     Text {
