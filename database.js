@@ -93,7 +93,7 @@ function createCategory(name) {
 function setTrackRating(trackId, categoryId, rating) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        bumpRatings(categoryId, rating, function() {
+        incrementRatings(categoryId, rating, function() {
             tx.executeSql("DELETE FROM RATINGS WHERE TrackId = ? AND CategoryId = ?", [trackId, categoryId])
             tx.executeSql("INSERT INTO RATINGS (TrackId, CategoryId, Rating) VALUES (?, ?, ?)", [trackId, categoryId, rating])
         })
@@ -119,12 +119,20 @@ function rateTrackBelow(trackId, comparisonId, categoryId) {
     })
 }
 
-function bumpRatings(categoryId, fromRating, callback) {
+function updateRatings(categoryId, fromRating, delta, callback) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        tx.executeSql("UPDATE RATINGS SET Rating=Rating+1 WHERE CategoryId=? AND Rating>=?", [categoryId, fromRating])
-        callback()
+        tx.executeSql("UPDATE RATINGS SET Rating=Rating+? WHERE CategoryId=? AND Rating>=?", [delta, categoryId, fromRating])
+        if (callback) callback()
     })
+}
+
+function incrementRatings(categoryId, fromRating, callback) {
+    updateRatings(categoryId, fromRating, 1, callback)
+}
+
+function decrementRatings(categoryId, fromRating, callback) {
+    updateRatings(categoryId, fromRating, -1, callback)
 }
 
 function getTrackRating(trackId, categoryId, callback) {
@@ -220,6 +228,11 @@ function initiateCategoryRating(trackId, categoryId, callback) {
 function resetRating(trackId, categoryId) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        tx.executeSql("DELETE FROM RATINGS WHERE TrackId=? AND CategoryId=?", [trackId, categoryId])
+        getTrackRating(trackId, categoryId, function(track) {
+            tx.executeSql("DELETE FROM RATINGS WHERE TrackId=? AND CategoryId=?", [trackId, categoryId])
+            if (track.Rating) {
+                decrementRatings(categoryId, track.Rating)
+            }
+        })
     })
 }
