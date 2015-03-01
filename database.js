@@ -230,7 +230,7 @@ function resetRating(trackId, categoryId) {
     db.transaction(function(tx) {
         getTrackRating(trackId, categoryId, function(track) {
             tx.executeSql("DELETE FROM RATINGS WHERE TrackId=? AND CategoryId=?", [trackId, categoryId])
-            if (track.Rating) {
+            if (track && track.Rating) {
                 decrementRatings(categoryId, track.Rating)
             }
         })
