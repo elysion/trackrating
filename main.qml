@@ -24,7 +24,7 @@ ApplicationWindow {
     }
 
     function addTracks(urls) {
-        rateTab.play(urls[0])
+        player.play(urls[0])
         urls.forEach(function(file) {
             var trackInfo = trackInfoProvider.getTrackInfo(file);
             Database.addOrReplaceTrack(trackInfo.artist, trackInfo.title, file)
@@ -144,7 +144,12 @@ ApplicationWindow {
     Item {
         id: tabs
 
-        anchors.fill: parent
+        anchors {
+            top: parent.top
+            left: parent.left
+            right: parent.right
+            bottom: player.top
+        }
 
         property int activeTab: 0
 
@@ -250,7 +255,7 @@ ApplicationWindow {
                 onDoubleClicked: {
                     if (ratedCheckBox.currentIndex === 1) return
 
-                    rateTab.play(model.get(row).Location)
+                    player.play(model.get(row).Location)
                     rateTab.startComparison(model.get(row), categoryCheckBox.getCurrentCategory())
 
                     tabs.activeTab = 1
@@ -263,11 +268,14 @@ ApplicationWindow {
 
             anchors.fill: parent
             visible: tabs.activeTab === 1
+            currentTrackLocation: player.source
 
             onTracksRated: {
                 trackListModel.refresh()
                 tabs.activeTab = 0
             }
+
+            onTrackClicked: player.play(track.Location)
         }
 
         Row {
@@ -306,6 +314,18 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    TrackPlayer {
+        id: player
+
+        anchors {
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
+        }
+
+        height: 200
     }
 
     DropArea {

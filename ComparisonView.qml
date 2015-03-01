@@ -12,12 +12,10 @@ Item {
     anchors.fill: parent
 
     signal tracksRated
+    signal trackClicked(variant track)
 
     property variant category
-
-    function play(url) {
-        player.play(url)
-    }
+    property string currentTrackLocation
 
     function contains(object, value) {
         for (var key in object) {
@@ -65,6 +63,8 @@ Item {
     }
     
     Text {
+        id: header
+
         anchors {
             top: parent.top
             topMargin: 10
@@ -79,16 +79,16 @@ Item {
         id: grid
 
         comparisonTerm: root.category.Name
-        currentTrackLocation: player.source
+        currentTrackLocation: root.currentTrackLocation
 
         anchors {
-            top: parent.top
-            bottom: player.top
+            top: header.top
+            bottom: parent.bottom
             left: parent.left
             right: parent.right
         }
 
-        onTrackClicked: player.play(track.Location)
+        onTrackClicked: root.trackClicked(track)
         onTrackRated: {
             var categoryId = root.category.CategoryId
             var comparisonId = comparison.TrackId
@@ -117,17 +117,5 @@ Item {
                 }
             })
         }
-    }
-    
-    TrackPlayer {
-        id: player
-        
-        anchors {
-            bottom: parent.bottom
-            left: parent.left
-            right: parent.right
-        }
-        
-        height: 200
-    }
+    }   
 }
