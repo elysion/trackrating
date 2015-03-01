@@ -11,6 +11,8 @@ Item {
     id: root
     anchors.fill: parent
 
+    signal tracksRated
+
     property variant category
 
     function play(url) {
@@ -103,8 +105,12 @@ Item {
                     }
                     // TODO: remove trackId as it is not really used
                     Database.getUnratedTracksFor(categoryId, trackId, function(unrated) {
-                        var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))
-                        startComparison(nextTrackForComparison, category)
+                        if (unrated.length === 0) {
+                            root.tracksRated()
+                        } else {
+                            var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))
+                            startComparison(nextTrackForComparison, category)
+                        }
                     })
                 } else {
                     compare(track, root.category)

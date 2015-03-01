@@ -258,6 +258,11 @@ ApplicationWindow {
 
             anchors.fill: parent
             visible: tabs.activeTab === 1
+
+            onTracksRated: {
+                trackListModel.refresh()
+                tabs.activeTab = 0
+            }
         }
 
         Row {
