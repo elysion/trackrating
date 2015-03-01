@@ -253,7 +253,6 @@ ApplicationWindow {
                 }
 
                 onDoubleClicked: {
-                    if (ratedCheckBox.currentIndex === 1) return
 
                     player.play(model.get(row).Location)
                     rateTab.startComparison(model.get(row), categoryCheckBox.getCurrentCategory())
