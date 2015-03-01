@@ -241,6 +241,7 @@ ApplicationWindow {
             }
 
             TrackList {
+                id: trackList
                 anchors {
                     top: sortBar.bottom
                     bottom: parent.bottom
@@ -255,11 +256,47 @@ ApplicationWindow {
                 }
 
                 onDoubleClicked: {
-
                     player.play(model.get(row).Location)
-                    rateTab.startComparison(model.get(row), categoryCheckBox.getCurrentCategory())
+                }
 
-                    tabs.activeTab = 1
+                MouseArea {
+                    id: contextMenuTrigger
+
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+
+                    property variant selectedTrackProxy
+
+                    onPressed: {
+                        selectedTrackProxy = trackList.itemAt(mouse.x, mouse.y)
+                        trackList.selectRowAt(mouse.x, mouse.y)
+                        contextMenu.popup()
+                    }
+                }
+
+                Menu {
+                    id: contextMenu
+
+                    MenuItem {
+                        text: "Rate"
+                        shortcut: "Ctrl+R"
+
+                        onTriggered: {
+                            var track = contextMenuTrigger.selectedTrackProxy
+                            player.play(track.Location)
+                            rateTab.startComparison(track, categoryCheckBox.getCurrentCategory())
+                            tabs.activeTab = 1
+                        }
+                    }
+
+                    MenuItem {
+                        text: "Play"
+                        shortcut: "Ctrl+P"
+
+                        onTriggered: {
+                            player.play(contextMenuTrigger.selectedTrackProxy.Location)
+                        }
+                    }
                 }
             }
         }

@@ -9,6 +9,15 @@ Item {
     property alias model: table.model
     signal doubleClicked(int row)
 
+    function itemAt(x, y) {
+        return model.get(table.rowAt(x, y))
+    }
+
+    function selectRowAt(x, y) {
+        table.selection.clear()
+        table.selection.select(table.rowAt(x, y))
+    }
+
     Text {
         id: title
         text: "Unsorted tracks"
