@@ -108,14 +108,14 @@ function rateTrack(trackId, isMoreThan, comparisonId, categoryId) {
 }
 
 function rateTrackAbove(trackId, comparisonId, categoryId) {
-    getTrackRating(comparisonId, categoryId, function(rating) {
-        setTrackRating(trackId, categoryId, rating + 1)
+    getTrackRating(comparisonId, categoryId, function(ratingInfo) {
+        setTrackRating(trackId, categoryId, ratingInfo.Rating + 1)
     })
 }
 
 function rateTrackBelow(trackId, comparisonId, categoryId) {
-    getTrackRating(comparisonId, categoryId, function(rating) {
-        setTrackRating(trackId, categoryId, rating)
+    getTrackRating(comparisonId, categoryId, function(ratingInfo) {
+        setTrackRating(trackId, categoryId, ratingInfo.Rating)
     })
 }
 
@@ -130,9 +130,9 @@ function bumpRatings(categoryId, fromRating, callback) {
 function getTrackRating(trackId, categoryId, callback) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        var results = tx.executeSql("SELECT Rating FROM TRACKS LEFT JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE TRACKS.TrackId = ? AND RATINGS.CategoryId = ?", [trackId, categoryId])
+        var results = tx.executeSql("SELECT TRACKS.*, RATINGS.* FROM TRACKS LEFT JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE TRACKS.TrackId = ? AND RATINGS.CategoryId = ?", [trackId, categoryId])
         if (results.rows.length === 1) {
-            callback(results.rows.item(0).Rating)
+            callback(results.rows.item(0))
         } else {
             callback(undefined)
         }
