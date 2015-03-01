@@ -264,6 +264,21 @@ ApplicationWindow {
                     player.play(tracks[0].Location)
                 }
 
+                function startRatingCurrentlySelectedTrack() {
+                    var tracks = trackList.getSelectedTracks()
+                    var track = tracks[0]
+                    player.play(track.Location)
+                    rateTab.startComparison(track, categoryCheckBox.getCurrentCategory())
+                    tabs.activeTab = 1
+                }
+
+                Action {
+                    id: rateAction
+                    text: "&Rate"
+                    shortcut: "Ctrl+R"
+                    onTriggered: trackList.startRatingCurrentlySelectedTrack()
+                }
+
                 MouseArea {
                     id: contextMenuTrigger
 
@@ -284,7 +299,6 @@ ApplicationWindow {
 
                     MenuItem {
                         text: "Rate"
-                        shortcut: "Ctrl+R"
 
                         onTriggered: {
                             var track = contextMenuTrigger.selectedTrackProxy
