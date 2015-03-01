@@ -35,16 +35,40 @@ Item {
             height: width
             source: "image://cover/" + modelData.Location
 
+            Rectangle {
+                id: infoBackground
+                anchors {
+                    left: parent.left
+                    bottom: parent.bottom
+                    right: parent.right
+                }
+                color: "black"
+                height: 100
+                opacity: 0.7
+            }
+
             Text {
+                id: trackInfo
                 property variant info: trackInfoProvider.getTrackInfo(modelData.Location)
 
                 anchors {
-                    top: parent.bottom
-                    topMargin: 10
-                    horizontalCenter: parent.horizontalCenter
+                    fill: infoBackground
+                    margins: 10
                 }
 
+                color: "white"
+                font {
+                    bold: true
+                    pointSize: 30
+                }
+
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+
+                elide: Text.ElideRight
+                maximumLineCount: 2
                 text: info.artist + " - " + info.title
+                wrapMode: Text.Wrap
             }
 
             PlayerButton {
