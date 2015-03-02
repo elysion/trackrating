@@ -12,6 +12,7 @@ Item {
     anchors.fill: parent
 
     signal allTracksRated
+    signal trackRated(variant track)
     signal trackClicked(variant track)
     signal comparingTracks(variant unrated, variant rated)
 
@@ -93,6 +94,7 @@ Item {
                         root.allTracksRated()
                         notification.show("All tracks rated in terms of \"" + category.Name + "\"")
                     } else {
+                        root.trackRated(track)
                         var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))
                         startComparison(nextTrackForComparison, category)
                     }

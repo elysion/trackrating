@@ -362,6 +362,10 @@ ApplicationWindow {
                 }
             }
 
+            onTrackRated: {
+                notification.show(track.Artist + " - " + track.Title + " rated!")
+            }
+
             Keys.onLeftPressed: {
                 player.seekBackward()
             }
