@@ -476,6 +476,8 @@ ApplicationWindow {
         }
 
         Rectangle {
+            id: rectangle
+
             anchors.centerIn: parent
             color: "#444"
             width: 400
@@ -488,10 +490,19 @@ ApplicationWindow {
         Text {
             id: notificationText
 
-            anchors.centerIn: parent
+            anchors {
+                fill: rectangle
+                margins: 10
+            }
+
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+
             color: "white"
+            elide: Text.ElideMiddle
             font.pointSize: 20
-            text: "notification"
+            maximumLineCount: 3
+            wrapMode: Text.Wrap
         }
 
         state: "hidden"
