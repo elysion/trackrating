@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += qml quick widgets sql multimedia
+QT += qml quick widgets sql multimedia svg
 
 LIBS += -ltag
 
