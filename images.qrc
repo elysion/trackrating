@@ -1,11 +1,11 @@
 <RCC>
     <qresource prefix="/images">
-        <file>rwd.svg</file>
-        <file>play.svg</file>
-        <file>fwd.svg</file>
-        <file>down.svg</file>
-        <file>up.svg</file>
-        <file>equal.svg</file>
-        <file>spinner.svg</file>
+        <file>up.png</file>
+        <file>rwd.png</file>
+        <file>play.png</file>
+        <file>fwd.png</file>
+        <file>down.png</file>
+        <file>equal.png</file>
+        <file>spinner.png</file>
     </qresource>
 </RCC>

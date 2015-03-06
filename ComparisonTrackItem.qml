@@ -76,7 +76,7 @@ Item {
 
                 width: 75
                 height: 75
-                source: "qrc:/images/play.svg"
+                source: "qrc:/images/play.png"
                 visible: !root.playing
 
                 onClicked: root.clicked(modelData)
@@ -87,7 +87,7 @@ Item {
 
                 width: 75
                 height: 75
-                source: "qrc:/images/spinner.svg"
+                source: "qrc:/images/spinner.png"
                 visible: root.playing
 
                 RotationAnimation on rotation {
@@ -128,7 +128,7 @@ Item {
                     width: parent.width
 
                     label: "Less " + root.comparisonTerm
-                    imageSource: "qrc:/images/down.svg"
+                    imageSource: "qrc:/images/down.png"
 
                     onClicked: root.rated(modelData, false)
                 }
@@ -143,7 +143,7 @@ Item {
                     width: parent.width
 
                     label: "More " + root.comparisonTerm
-                    imageSource: "qrc:/images/up.svg"
+                    imageSource: "qrc:/images/up.png"
 
                     onClicked: root.rated(modelData, true)
                 }

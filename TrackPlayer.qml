@@ -150,20 +150,20 @@ Item {
                 width: 30
                 height: width
                 onClicked: player.seek(0)
-                source: "qrc:/images/rwd.svg"
+                source: "qrc:/images/rwd.png"
                 smooth: true
             }
             PlayerButton {
                 width: 30
                 height: width
                 onClicked: root.toggle()
-                source: "qrc:/images/play.svg"
+                source: "qrc:/images/play.png"
                 smooth: true
             }
             PlayerButton {
                 width: 30
                 height: width
-                source: "qrc:/images/fwd.svg"
+                source: "qrc:/images/fwd.png"
                 smooth: true
             }
         }
