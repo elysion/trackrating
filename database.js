@@ -286,3 +286,11 @@ function removeTrack(trackId, crateId) {
         })
     }
 }
+
+function getTrackCount(callback) {
+    var db = getDatabase()
+    db.transaction(function(tx) {
+        var result = tx.executeSql("SELECT COUNT(TrackId) AS Count FROM TRACKS")
+        callback(result.rows.item(0).Count)
+    })
+}

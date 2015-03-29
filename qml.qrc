@@ -12,5 +12,10 @@
         <file>NewCategoryDialog.qml</file>
         <file>NewCrateDialog.qml</file>
         <file>QueryDialog.qml</file>
+        <file>ApplicationMenu.qml</file>
+        <file>TopBar.qml</file>
+        <file>Notification.qml</file>
+        <file>ImportOverlay.qml</file>
+        <file>TabSelector.qml</file>
     </qresource>
 </RCC>

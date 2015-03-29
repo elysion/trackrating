@@ -26,11 +26,11 @@ ApplicationWindow {
     function addTracks(urls) {
         urls.forEach(function(file) {
             var trackInfo = trackInfoProvider.getTrackInfo(file)
-            var crate = crateCheckBox.getCurrentCrate()
+            var crate = sortBar.crate
             Database.addTrack(trackInfo.artist, trackInfo.title, trackInfo.url, crate.CrateId)
         })
 
-        optionsRow.updateList()
+        sortBar.updateList()
     }
 
     function addFolder(folder) {
@@ -38,53 +38,36 @@ ApplicationWindow {
         addTracks(tracks)
     }
 
-    menuBar: MenuBar {
-        Menu {
-            title: qsTr("&File")
-            MenuItem {
-                text: qsTr("Import f&iles")
-                onTriggered: importFilesDialog.open()
-            }
-            MenuItem {
-                text: qsTr("Import f&older")
-                onTriggered: importFolderDialog.open()
-            }
-            MenuItem {
-                text: qsTr("Clear database")
-                onTriggered: {
-                    Database.clearDatabase()
-                    categoryCheckBox.refresh()
-                    ratedCheckBox.select(false)
-                    crateCheckBox.refresh()
-                    crateCheckBox.currentIndex = 0
-                    trackListModel.refresh()
-                }
-            }
-            MenuItem {
-                text: qsTr("Add category")
-
-                onTriggered: {
-                    Database.getCategories(function(categories) {
-                        newCategoryDialog.firstCategory = categories.length === 0
-                        newCategoryDialog.open()
-                    })
-                }
-            }
-            MenuItem {
-                text: qsTr("Add crate")
-
-                onTriggered: {
-                    Database.getCrates(function(crates) {
-                        newCrateDialog.open()
-                    })
-                }
-            }
-
-            MenuItem {
-                text: qsTr("E&xit")
-                onTriggered: Qt.quit();
-            }
+    menuBar: ApplicationMenu {
+        onClearDatabase: {
+            Database.clearDatabase()
+            sortBar.refresh()
+            trackListModel.refresh()
+            importOverlay.refresh()
         }
+
+        onImportFolder: {
+            importFolderDialog.open()
+        }
+
+        onImportFiles: {
+            importFilesDialog.open()
+        }
+
+        onAddCategory: {
+            Database.getCategories(function(categories) {
+                newCategoryDialog.firstCategory = categories.length === 0
+                newCategoryDialog.open()
+            })
+        }
+
+        onAddCrate: {
+            Database.getCrates(function(crates) {
+                newCrateDialog.open()
+            })
+        }
+
+        onExit: Qt.quit()
     }
 
     NewCategoryDialog {
@@ -93,9 +76,8 @@ ApplicationWindow {
         onAccepted: {
             firstCategory = false
             Database.createCategory(queryResult)
-            categoryCheckBox.refresh()
-            categoryCheckBox.selectCategory(queryResult)
-            ratedCheckBox.select(false)
+            sortBar.refresh()
+            sortBar.selectCategory(queryResult)
             queryResult = ""
         }
     }
@@ -105,8 +87,8 @@ ApplicationWindow {
 
         onAccepted: {
             Database.createCrate(queryResult)
-            crateCheckBox.refresh()
-            crateCheckBox.selectCrate(queryResult)
+            sortBar.refresh()
+            sortBar.selectCrate(queryResult)
             queryResult = ""
             trackListModel.refresh()
         }
@@ -118,7 +100,6 @@ ApplicationWindow {
 
         onAccepted: {
             root.addFolder(folder)
-            trackListModel.refresh()
         }
     }
 
@@ -135,9 +116,8 @@ ApplicationWindow {
         id: trackListModel
 
         function refresh(sort, filter) {
-            var crate = crateCheckBox.getCurrentCrate()
+            var crate = sortBar.crate
             Database.getTracks(crate.CrateId, sort || "Artist", filter || "", function(results) {
-                importOverlay.visible = results.length === 0
                 showTracksFromDbResults(results)
             })
         }
@@ -148,6 +128,8 @@ ApplicationWindow {
             for (var i = 0; i < results.length; ++i) {
                 append(results.item(i))
             }
+
+            importOverlay.refresh()
         }
     }
 
@@ -165,7 +147,7 @@ ApplicationWindow {
 
         onActiveTabChanged: {
             if (activeTab === 0) {
-                optionsRow.updateList()
+                sortBar.updateList()
             }
         }
 
@@ -174,179 +156,31 @@ ApplicationWindow {
             visible: tabs.activeTab === 0
             focus: visible
 
-            RowLayout {
+            TopBar {
                 id: sortBar
 
-                anchors {
-                    top: parent.top
-                    left: parent.left
-                    right: parent.right
-                    margins: 10
+                onNoCategories: {
+                    newCategoryDialog.firstCategory = true
+                    newCategoryDialog.open()
                 }
 
-                Row {
-                    id: optionsRow
+                onCategoryChanged: updateList()
+                onCrateChanged: updateList()
+                onRatedChanged: updateList()
 
-                    spacing: 10
+                function updateList() {
+                    if (crate === undefined) return
+                    if (category === undefined) return
 
-                    function updateList() {
-                        var crate = crateCheckBox.getCurrentCrate()
-                        if (crate === undefined) return
-
-                        var category = categoryCheckBox.getCurrentCategory()
-                        if (category === undefined) return
-
-                        if (ratedCheckBox.rated()) {
-                            Database.getRatedTracksFor(category.CategoryId, crate.CrateId, showTracks)
-                        } else {
-                            Database.getUnratedTracksFor(category.CategoryId, crate.CrateId, null, showTracks)
-                        }
-
-                        function showTracks(tracks) {
-                            trackListModel.showTracksFromDbResults(tracks)
-                        }
+                    if (rated) {
+                        Database.getRatedTracksFor(category.CategoryId, crate.CrateId, showTracks)
+                    } else {
+                        Database.getUnratedTracksFor(category.CategoryId, crate.CrateId, null, showTracks)
                     }
 
-                    Text {
-                        text: "Crate:"
-                        anchors.verticalCenter: parent.verticalCenter
+                    function showTracks(tracks) {
+                        trackListModel.showTracksFromDbResults(tracks)
                     }
-
-                    ComboBox {
-                        id: crateCheckBox
-
-                        function select(crate) {
-                            for (var i = 0; i < model.count; ++i) {
-                                if (model.get(i).Name === crate) {
-                                    currentIndex = i
-                                    break
-                                }
-                            }
-                        }
-
-                        function getCurrentCrate() {
-                            var currentCrate = model.get(currentIndex)
-                            if (!model || !currentCrate) return undefined
-                            return currentCrate
-                        }
-
-                        width: 200
-
-                        onCurrentIndexChanged: optionsRow.updateList()
-
-                        model: ListModel {}
-
-                        function selectCrate(name) {
-                            for (var i = 0; i < model.count; ++i) {
-                                if (name === model.get(i).Name) {
-                                    currentIndex = i
-                                    break
-                                }
-                            }
-                        }
-
-                        function refresh() {
-                            var currentItem = currentText
-                            model.clear()
-                            currentIndex = -1
-
-                            Database.getCrates(function(crates) {
-                                for (var i = 0; i < crates.length; ++i) {
-                                    var name = crates.item(i).Name
-                                    crateCheckBox.model.append({text: crates.item(i).Name, Name: name, CrateId: crates.item(i).CrateId})
-                                }
-
-                                if (crates.length === 0) {
-                                    newCrateDialog.firstCrate = true
-                                    newCrateDialog.open()
-                                }
-
-                                if (currentItem) {
-                                    selectCrate(currentItem)
-                                }
-                            })
-                        }
-                    }
-
-                    Text {
-                        text: "Category:"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    ComboBox {
-                        id: categoryCheckBox
-                        width: 200
-
-                        function getCurrentCategory() {
-                            if (!model || !model.get(currentIndex)) return undefined
-                            return model.get(currentIndex)
-                        }
-
-                        function selectCategory(name) {
-                            for (var i = 0; i < model.count; ++i) {
-                                if (name === model.get(i).Name) {
-                                    currentIndex = i
-                                    break
-                                }
-                            }
-                        }
-
-                        function refresh() {
-                            var currentItem = categoryCheckBox.currentText
-                            categoryCheckBox.model.clear()
-                            categoryCheckBox.currentIndex = -1
-
-                            Database.getCategories(function(categories) {
-                                for (var i = 0; i < categories.length; ++i) {
-                                    var name = categories.item(i).Name
-                                    categoryCheckBox.model.append({text: categories.item(i).Name, Name: name, CategoryId: categories.item(i).CategoryId})
-                                }
-
-                                if (categories.length === 0) {
-                                    newCategoryDialog.firstCategory = true
-                                    newCategoryDialog.open()
-                                }
-
-                                if (currentItem) {
-                                    selectCategory(currentItem)
-                                }
-                            })
-                        }
-
-                        model: ListModel {}
-
-                        onCurrentIndexChanged: {
-                            optionsRow.updateList()
-                        }
-                    }
-
-                    Text {
-                        text: "Show:"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    ComboBox {
-                        id: ratedCheckBox
-
-                        function select(rated) {
-                            currentIndex = rated ? 1 : 0
-                        }
-
-                        function rated() {
-                            return currentIndex === 1
-                        }
-
-                        width: 200
-
-                        onCurrentIndexChanged: optionsRow.updateList()
-
-                        model: ["Unrated", "Rated"]
-                    }
-                }
-
-                Component.onCompleted: {
-                    crateCheckBox.refresh()
-                    categoryCheckBox.refresh()
                 }
             }
 
@@ -362,7 +196,9 @@ ApplicationWindow {
                 model: trackListModel
 
                 Component.onCompleted: {
-                    optionsRow.updateList()
+                    sortBar.refresh()
+                    sortBar.updateList()
+                    importOverlay.refresh()
                 }
 
                 onDoubleClicked: {
@@ -378,7 +214,7 @@ ApplicationWindow {
                     var tracks = trackList.getSelectedTracks()
                     var track = tracks[0]
                     player.play(track.Location)
-                    rateTab.startComparison(track, categoryCheckBox.getCurrentCategory(), crateCheckBox.getCurrentCrate())
+                    rateTab.startComparison(track, sortBar.category, sortBar.crate)
                     tabs.activeTab = 1
                 }
 
@@ -409,12 +245,11 @@ ApplicationWindow {
 
                     MenuItem {
                         text: "Rate"
-                        shortcut: "Ctrl+R"
 
                         onTriggered: {
                             var track = contextMenuTrigger.selectedTrackProxy
                             player.play(track.Location)
-                            rateTab.startComparison(track, categoryCheckBox.getCurrentCategory(), crateCheckBox.getCurrentCrate())
+                            rateTab.startComparison(track, sortBar.category, sortBar.crate)
                             tabs.activeTab = 1
                         }
                     }
@@ -434,80 +269,21 @@ ApplicationWindow {
                         onTriggered: {
                             Database.removeTrack(contextMenuTrigger.selectedTrackProxy.TrackId,
                                                  contextMenuTrigger.selectedTrackProxy.CrateId)
-                            optionsRow.updateList()
+                            sortBar.updateList()
                         }
                     }
                 }
 
-                Row {
-                    anchors {
-                        bottom: parent.bottom
-                        bottomMargin: 10
-                        horizontalCenter: parent.horizontalCenter
-                    }
-
-                    spacing: 10
-
-                    Repeater {
-                        model: ["List", "Rate"]
-
-                        delegate: Rectangle {
-                            width: 100
-                            height: 20
-                            radius: 20
-                            color: "#8cf"
-                            opacity: index === tabs.activeTab || mouseArea.containsMouse ? 0.95 : 0.75
-
-                            Text {
-                                anchors.centerIn: parent
-                                color: "white"
-                                font.bold: true
-                                text: modelData
-                            }
-
-                            MouseArea {
-                                id: mouseArea
-                                anchors.fill: parent
-                                cursorShape: "PointingHandCursor"
-                                hoverEnabled: true
-                                onClicked: tabs.activeTab = index
-                            }
-                        }
-                    }
-                }
-
-                Item {
+                ImportOverlay {
                     id: importOverlay
 
-                    anchors.fill: parent
-                    visible: false
+                    onImportFolder: importFolderDialog.open()
+                    onImportFiles: importFilesDialog.open()
 
-                    Rectangle {
-                        color: "black"
-                        opacity: 0.75
-
-                        anchors.fill: parent
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                    }
-
-                    Column {
-                        anchors.centerIn: parent
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            color: "white"
-                            text: "Crate empty."
-                        }
-
-                        Button {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "Add folders"
-
-                            onClicked: importFolderDialog.open()
-                        }
+                    function refresh() {
+                        Database.getTrackCount(function(trackCount) {
+                            importOverlay.visible = trackCount === 0
+                        })
                     }
                 }
             }
@@ -522,13 +298,13 @@ ApplicationWindow {
 
             Keys.onDeletePressed: {
                 var tracks = trackList.getSelectedTracks()
-                var crate = crateCheckBox.getCurrentCrate()
+                var crate = sortBar.crate
 
                 tracks.forEach(function(track) {
                     Database.removeTrack(track.TrackId, crate.CrateId)
                 })
 
-                optionsRow.updateList()
+                sortBar.updateList()
             }
         }
 
@@ -542,8 +318,8 @@ ApplicationWindow {
             playing: player.playing
 
             onAllTracksRated: {
-                optionsRow.updateList()
-                ratedCheckBox.select(true)
+                sortBar.updateList()
+                sortBar.selectRated(true)
                 tabs.activeTab = 0
             }
 
@@ -582,6 +358,13 @@ ApplicationWindow {
                 player.play()
             }
         }
+
+        TabSelector {
+            id: tabSelector
+
+            activeTab: tabs.activeTab
+            onTabSelected: tabs.activeTab = tab
+        }
     }
 
     TrackPlayer {
@@ -609,81 +392,7 @@ ApplicationWindow {
         }
     }
 
-    Item {
+    Notification {
         id: notification
-
-        function show(text) {
-            notificationText.text = text
-            state = "visible"
-            timer.restart()
-        }
-
-        function hide() {
-            state = "hidden"
-        }
-
-        anchors.centerIn: parent
-
-        Timer {
-            id: timer
-            interval: 2000
-            running: false
-            repeat: false
-            onTriggered: notification.hide()
-        }
-
-        Rectangle {
-            id: rectangle
-
-            anchors.centerIn: parent
-            color: "#444"
-            width: 400
-            height: 200
-            opacity: 0.8
-            radius: 20
-            visible: true
-        }
-
-        Text {
-            id: notificationText
-
-            anchors {
-                fill: rectangle
-                margins: 10
-            }
-
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-
-            color: "white"
-            elide: Text.ElideMiddle
-            font.pointSize: 20
-            maximumLineCount: 3
-            wrapMode: Text.Wrap
-        }
-
-        state: "hidden"
-        states: [
-            State {
-                name: "visible"
-                PropertyChanges {
-                    target: notification
-                    opacity: 1
-                }
-            },
-            State {
-                name: "hidden"
-                PropertyChanges {
-                    target: notification
-                    opacity: 0
-                }
-            }
-        ]
-
-        transitions: Transition {
-            PropertyAnimation {
-                properties: "opacity"
-            }
-        }
     }
 }
