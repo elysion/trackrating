@@ -27,7 +27,7 @@ QImage CoverImageProvider::requestImage(const QString & id, QSize * size, const 
     QImage image;
 
     if (!id.isEmpty()) {
-        TagLib::MPEG::File file(id.mid(QString("file://").length()).toUtf8().constData());
+        TagLib::MPEG::File file(QString(id).remove("file://").toUtf8().constData());
         TagLib::ID3v2::Tag *tag = file.ID3v2Tag();
 
         if (file.isValid() && tag) {

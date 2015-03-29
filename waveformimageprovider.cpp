@@ -44,7 +44,7 @@ QImage WaveformImageProvider::requestImage(const QString & id, QSize * size, con
     mh = mpg123_new(NULL, &err);
 
     /* open the file and get the decoding format */
-    mpg123_open(mh, id.mid(QString("file://").length()).toUtf8().constData());
+    mpg123_open(mh, QString(id).remove("file://").toUtf8().constData());
     mpg123_getformat(mh, &rate, &channels, &encoding);
     off_t length = mpg123_length(mh);
 
