@@ -4,6 +4,7 @@
 #include <taglib/id3v2tag.h>
 #include <taglib/mpegfile.h>
 #include <QFileInfo>
+#include <QDebug>
 
 TrackInfoProvider::TrackInfoProvider()
 {
@@ -39,3 +40,9 @@ QVariantMap TrackInfoProvider::getTrackInfo(QString url)
     return info;
 }
 
+void TrackInfoProvider::process(QList<QString> urls) {
+    foreach(QString url, urls) {
+        QVariantMap trackInfo = getTrackInfo(url);
+        emit resultReady(trackInfo);
+    }
+}

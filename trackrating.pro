@@ -8,7 +8,8 @@ SOURCES += main.cpp \
     coverimageprovider.cpp \
     waveformimageprovider.cpp \
     trackinfoprovider.cpp \
-    filesinfolderprovider.cpp
+    filesinfolderprovider.cpp \
+    threadedtrackinfoprovider.cpp
 
 RESOURCES += qml.qrc \
     images.qrc
@@ -23,7 +24,8 @@ HEADERS += \
     coverimageprovider.h \
     waveformimageprovider.h \
     trackinfoprovider.h \
-    filesinfolderprovider.h
+    filesinfolderprovider.h \
+    threadedtrackinfoprovider.h
 
 unix: LIBS += -L/usr/local/Cellar/taglib/1.9.1/lib/ -ltag -L/usr/local/Cellar/mpg123/1.21.0/lib/ -lmpg123
 

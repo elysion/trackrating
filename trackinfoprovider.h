@@ -4,6 +4,7 @@
 #include <QVariantMap>
 #include <QObject>
 #include <QString>
+#include <QStringList>
 
 class TrackInfoProvider : public QObject
 {
@@ -15,6 +16,10 @@ public:
 
 public slots:
     QVariantMap getTrackInfo(QString url);
+    void process(QList<QString> urls);
+
+signals:
+    void resultReady(QVariantMap result);
 };
 
 #endif // TRACKINFOPROVIDER_H

@@ -1,11 +1,13 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQmlComponent>
 
 #include "coverimageprovider.h"
 #include "waveformimageprovider.h"
 #include "trackinfoprovider.h"
 #include "filesinfolderprovider.h"
+#include "threadedtrackinfoprovider.h"
 
 int main(int argc, char *argv[])
 {
@@ -18,6 +20,7 @@ int main(int argc, char *argv[])
     engine.addImageProvider(QLatin1String("waveform"), new WaveformImageProvider);
     engine.addImageProvider(QLatin1String("cover"), new CoverImageProvider);
     qDebug(engine.offlineStoragePath().toUtf8().constData());
+    qmlRegisterType<ThreadedTrackInfoProvider>("trackrating", 1, 0, "ThreadedTrackInfoProvider");
     TrackInfoProvider trackInfoProvider;
     engine.rootContext()->setContextProperty("trackInfoProvider", &trackInfoProvider);
     FilesInFolderProvider filesInFolderProvider;

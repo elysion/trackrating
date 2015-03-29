@@ -7,6 +7,7 @@ import QtMultimedia 5.0
 import QtGraphicalEffects 1.0
 import Qt.labs.settings 1.0
 import "database.js" as Database
+import trackrating 1.0
 
 ApplicationWindow {
     id: root
@@ -23,14 +24,20 @@ ApplicationWindow {
         property alias height: root.height
     }
 
-    function addTracks(urls) {
-        urls.forEach(function(file) {
-            var trackInfo = trackInfoProvider.getTrackInfo(file)
-            var crate = sortBar.crate
-            Database.addTrack(trackInfo.artist, trackInfo.title, trackInfo.filename, trackInfo.url, crate.CrateId)
-        })
+    ThreadedTrackInfoProvider {
+        id: threadedTrackInfoProvider
 
-        sortBar.updateList()
+        property string crateId
+
+        onResultReady: {
+            Database.addTrack(trackInfo.artist, trackInfo.title, trackInfo.filename, trackInfo.url, crateId)
+            sortBar.updateList()
+        }
+    }
+
+    function addTracks(urls) {
+        threadedTrackInfoProvider.crateId = sortBar.crate.CrateId
+        threadedTrackInfoProvider.getTrackInfo(Array.prototype.slice.call(urls))
     }
 
     function addFolder(folder) {
