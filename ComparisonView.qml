@@ -120,7 +120,7 @@ Item {
         }
 
         font.pointSize: 20
-        text: "Rate tracks in terms of \"" + root.category.Name + "\" in " + root.crate.Name
+        text: "Rate tracks in terms of \"" + root.category.Name + "\""
     }
 
     TrackComparison {
