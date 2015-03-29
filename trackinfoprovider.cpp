@@ -3,6 +3,7 @@
 #include <taglib/tstring.h>
 #include <taglib/id3v2tag.h>
 #include <taglib/mpegfile.h>
+#include <QFileInfo>
 
 TrackInfoProvider::TrackInfoProvider()
 {
@@ -28,6 +29,7 @@ QVariantMap TrackInfoProvider::getTrackInfo(QString url)
 
         if (file.isValid() && tag) {
             info.insert("url", "file://" + location);
+            info.insert("filename", QFileInfo(location).fileName());
             info.insert("title", toQString(tag->title()));
             info.insert("artist", toQString(tag->artist()));
             info.insert("album", toQString(tag->album()));

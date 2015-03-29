@@ -37,6 +37,7 @@ function getDatabase() {
                       + "Artist TEXT, "
                       + "Title TEXT, "
                       + "Location TEXT, "
+                      + "Filename TEXT, "
                       + "CrateId INTEGER, "
                       + "FOREIGN KEY(CrateId) REFERENCES CRATES(CrateId) "
                       + "UNIQUE (Location, CrateId) ON CONFLICT IGNORE"
@@ -96,15 +97,15 @@ function getRatedTracksFor(categoryId, crateId, callback) {
 function getUnratedTracksFor(categoryId, crateId, excludeTrackId, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT TRACKS.* FROM TRACKS WHERE TRACKS.TrackId IS NOT ? AND TRACKS.CrateId IS ? AND TRACKS.TrackId NOT IN (SELECT TRACKS.TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ? AND RATINGS.CrateId IS ? AND RATINGS.Rating IS NOT NULL)", [excludeTrackId, crateId, categoryId, crateId])
+        var rs = tx.executeSql("SELECT TRACKS.* FROM TRACKS WHERE TRACKS.TrackId IS NOT ? AND TRACKS.CrateId IS ? AND TRACKS.TrackId NOT IN (SELECT TRACKS.TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ? AND RATINGS.CrateId IS ? AND RATINGS.Rating IS NOT NULL) ORDER BY TRACKS.Artist, TRACKS.Title", [excludeTrackId, crateId, categoryId, crateId])
         callback(rs.rows)
     })
 }
 
-function addTrack(artist, title, location, crateId) {
+function addTrack(artist, title, filename, location, crateId) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        tx.executeSql("INSERT OR IGNORE INTO TRACKS (Artist, Title, Location, CrateId) VALUES (?,?,?,?)", [artist, title, location, crateId])
+        tx.executeSql("INSERT OR IGNORE INTO TRACKS (Artist, Title, Filename, Location, CrateId) VALUES (?,?,?,?,?)", [artist, title, filename, location, crateId])
     })
 }
 

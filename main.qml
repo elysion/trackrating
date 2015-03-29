@@ -27,7 +27,7 @@ ApplicationWindow {
         urls.forEach(function(file) {
             var trackInfo = trackInfoProvider.getTrackInfo(file)
             var crate = sortBar.crate
-            Database.addTrack(trackInfo.artist, trackInfo.title, trackInfo.url, crate.CrateId)
+            Database.addTrack(trackInfo.artist, trackInfo.title, trackInfo.filename, trackInfo.url, crate.CrateId)
         })
 
         sortBar.updateList()
