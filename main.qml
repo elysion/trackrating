@@ -28,14 +28,27 @@ ApplicationWindow {
         id: threadedTrackInfoProvider
 
         property string crateId
+        property int total
+        property int processed
 
         onResultReady: {
             Database.addTrack(trackInfo.artist, trackInfo.title, trackInfo.filename, trackInfo.url, crateId)
             sortBar.updateList()
+            processed++
+            statusNotification.update('Processing: ' + (processed + 1) + '/' + total)
+
+            if (processed === total) {
+                statusNotification.hide()
+            }
         }
     }
 
     function addTracks(urls) {
+        threadedTrackInfoProvider.processed = 0
+        threadedTrackInfoProvider.total = urls.length
+
+        statusNotification.show('Importing tracks')
+
         threadedTrackInfoProvider.crateId = sortBar.crate.CrateId
         threadedTrackInfoProvider.getTrackInfo(Array.prototype.slice.call(urls))
     }
@@ -401,5 +414,9 @@ ApplicationWindow {
 
     Notification {
         id: notification
+    }
+
+    StatusNotification {
+        id: statusNotification
     }
 }

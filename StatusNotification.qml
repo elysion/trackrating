@@ -22,6 +22,7 @@ Item {
 
     function hide() {
         state = "hidden"
+        statusText.text = ''
     }
 
     anchors.centerIn: parent
