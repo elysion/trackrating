@@ -7,10 +7,8 @@ import QtMultimedia 5.0
 import QtGraphicalEffects 1.0
 import "database.js" as Database
 
-Rectangle {
+Item {
     id: root
-
-    color: "#333"
 
     property alias source: player.source
     property bool playing: player.playbackState === Audio.PlayingState
@@ -36,6 +34,14 @@ Rectangle {
 
     function seek(deltaMs) {
         player.seek(player.position + deltaMs)
+    }
+
+    LinearGradient {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#000" }
+            GradientStop { position: 1.0; color: "#333" }
+        }
     }
 
     Audio {
