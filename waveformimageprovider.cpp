@@ -58,7 +58,7 @@ QImage WaveformImageProvider::requestImage(const QString & id, QSize * size, con
     QPainter p;
     p.begin(&image);
     p.setTransform(transform);
-    p.setPen(QPen(QColor(Qt::black)));
+    p.setPen(QPen(QColor(Qt::white)));
     p.setBrush(QBrush(QColor(Qt::color0), Qt::NoBrush));
 
     int x = 0;

@@ -7,8 +7,10 @@ import QtMultimedia 5.0
 import QtGraphicalEffects 1.0
 import "database.js" as Database
 
-Item {
+Rectangle {
     id: root
+
+    color: "#333"
 
     property alias source: player.source
     property bool playing: player.playbackState === Audio.PlayingState
@@ -78,7 +80,7 @@ Item {
                 }
                 
                 width: bgWaveform.width
-                opacity: bgWaveform.opacity
+                opacity: 1
                 source: "image://waveform/"+player.source
                 smooth: false
                 clip: true
