@@ -25,11 +25,17 @@ ApplicationWindow {
 
     function addTracks(urls) {
         urls.forEach(function(file) {
-            var trackInfo = trackInfoProvider.getTrackInfo(file);
-            Database.addOrReplaceTrack(trackInfo.artist, trackInfo.title, file)
+            var trackInfo = trackInfoProvider.getTrackInfo(file)
+            var crate = crateCheckBox.getCurrentCrate()
+            Database.addTrack(trackInfo.artist, trackInfo.title, trackInfo.url, crate.CrateId)
         })
 
         optionsRow.updateList()
+    }
+
+    function addFolder(folder) {
+        var tracks = filesInFolderProvider.getFiles(folder)
+        addTracks(tracks)
     }
 
     menuBar: MenuBar {
@@ -48,12 +54,30 @@ ApplicationWindow {
                 onTriggered: {
                     Database.clearDatabase()
                     categoryCheckBox.refresh()
+                    ratedCheckBox.select(false)
+                    crateCheckBox.refresh()
+                    crateCheckBox.currentIndex = 0
                     trackListModel.refresh()
                 }
             }
             MenuItem {
                 text: qsTr("Add category")
-                onTriggered: newCategoryDialog.open()
+
+                onTriggered: {
+                    Database.getCategories(function(categories) {
+                        newCategoryDialog.firstCategory = categories.length === 0
+                        newCategoryDialog.open()
+                    })
+                }
+            }
+            MenuItem {
+                text: qsTr("Add crate")
+
+                onTriggered: {
+                    Database.getCrates(function(crates) {
+                        newCrateDialog.open()
+                    })
+                }
             }
 
             MenuItem {
@@ -63,47 +87,39 @@ ApplicationWindow {
         }
     }
 
-    Dialog {
+    NewCategoryDialog {
         id: newCategoryDialog
 
-        title: "Create a new category"
-
-        Item {
-            anchors.fill: parent
-
-            Text {
-                id: label
-
-                anchors {
-                    left: parent.left
-                    top: parent.top
-                }
-
-                text: "Category: "
-            }
-
-            TextField {
-                id: textField
-
-                anchors {
-                    left: label.right
-                    right: parent.right
-                    top: parent.top
-                }
-            }
+        onAccepted: {
+            firstCategory = false
+            Database.createCategory(queryResult)
+            categoryCheckBox.refresh()
+            categoryCheckBox.selectCategory(queryResult)
+            ratedCheckBox.select(false)
+            queryResult = ""
         }
+    }
 
-        standardButtons: StandardButton.Ok | StandardButton.Cancel
+    NewCrateDialog {
+        id: newCrateDialog
 
         onAccepted: {
-            Database.createCategory(textField.text)
-            categoryCheckBox.refresh()
+            Database.createCrate(queryResult)
+            crateCheckBox.refresh()
+            crateCheckBox.selectCrate(queryResult)
+            queryResult = ""
+            trackListModel.refresh()
         }
     }
 
     FileDialog {
         id: importFolderDialog
         selectFolder: true
+
+        onAccepted: {
+            root.addFolder(folder)
+            trackListModel.refresh()
+        }
     }
 
     FileDialog {
@@ -119,10 +135,9 @@ ApplicationWindow {
         id: trackListModel
 
         function refresh(sort, filter) {
-            sort = sort || "Artist"
-            filter = filter || ""
-
-            Database.getTracks(sort, filter, function(results) {
+            var crate = crateCheckBox.getCurrentCrate()
+            Database.getTracks(crate.CrateId, sort || "Artist", filter || "", function(results) {
+                importOverlay.visible = results.length === 0
                 showTracksFromDbResults(results)
             })
         }
@@ -175,17 +190,81 @@ ApplicationWindow {
                     spacing: 10
 
                     function updateList() {
+                        var crate = crateCheckBox.getCurrentCrate()
+                        if (crate === undefined) return
+
                         var category = categoryCheckBox.getCurrentCategory()
                         if (category === undefined) return
 
-                        if (ratedCheckBox.currentIndex === 1) {
-                            Database.getRatedTracksFor(category.CategoryId, showTracks)
+                        if (ratedCheckBox.rated()) {
+                            Database.getRatedTracksFor(category.CategoryId, crate.CrateId, showTracks)
                         } else {
-                            Database.getUnratedTracksFor(category.CategoryId, null, showTracks)
+                            Database.getUnratedTracksFor(category.CategoryId, crate.CrateId, null, showTracks)
                         }
 
                         function showTracks(tracks) {
                             trackListModel.showTracksFromDbResults(tracks)
+                        }
+                    }
+
+                    Text {
+                        text: "Crate:"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    ComboBox {
+                        id: crateCheckBox
+
+                        function select(crate) {
+                            for (var i = 0; i < model.count; ++i) {
+                                if (model.get(i).Name === crate) {
+                                    currentIndex = i
+                                    break
+                                }
+                            }
+                        }
+
+                        function getCurrentCrate() {
+                            var currentCrate = model.get(currentIndex)
+                            if (!model || !currentCrate) return undefined
+                            return currentCrate
+                        }
+
+                        width: 200
+
+                        onCurrentIndexChanged: optionsRow.updateList()
+
+                        model: ListModel {}
+
+                        function selectCrate(name) {
+                            for (var i = 0; i < model.count; ++i) {
+                                if (name === model.get(i).Name) {
+                                    currentIndex = i
+                                    break
+                                }
+                            }
+                        }
+
+                        function refresh() {
+                            var currentItem = currentText
+                            model.clear()
+                            currentIndex = -1
+
+                            Database.getCrates(function(crates) {
+                                for (var i = 0; i < crates.length; ++i) {
+                                    var name = crates.item(i).Name
+                                    crateCheckBox.model.append({text: crates.item(i).Name, Name: name, CrateId: crates.item(i).CrateId})
+                                }
+
+                                if (crates.length === 0) {
+                                    newCrateDialog.firstCrate = true
+                                    newCrateDialog.open()
+                                }
+
+                                if (currentItem) {
+                                    selectCrate(currentItem)
+                                }
+                            })
                         }
                     }
 
@@ -203,12 +282,33 @@ ApplicationWindow {
                             return model.get(currentIndex)
                         }
 
+                        function selectCategory(name) {
+                            for (var i = 0; i < model.count; ++i) {
+                                if (name === model.get(i).Name) {
+                                    currentIndex = i
+                                    break
+                                }
+                            }
+                        }
+
                         function refresh() {
+                            var currentItem = categoryCheckBox.currentText
                             categoryCheckBox.model.clear()
+                            categoryCheckBox.currentIndex = -1
 
                             Database.getCategories(function(categories) {
                                 for (var i = 0; i < categories.length; ++i) {
-                                    categoryCheckBox.model.append({text: categories.item(i).Name, Name: categories.item(i).Name, CategoryId: categories.item(i).CategoryId})
+                                    var name = categories.item(i).Name
+                                    categoryCheckBox.model.append({text: categories.item(i).Name, Name: name, CategoryId: categories.item(i).CategoryId})
+                                }
+
+                                if (categories.length === 0) {
+                                    newCategoryDialog.firstCategory = true
+                                    newCategoryDialog.open()
+                                }
+
+                                if (currentItem) {
+                                    selectCategory(currentItem)
                                 }
                             })
                         }
@@ -227,6 +327,15 @@ ApplicationWindow {
 
                     ComboBox {
                         id: ratedCheckBox
+
+                        function select(rated) {
+                            currentIndex = rated ? 1 : 0
+                        }
+
+                        function rated() {
+                            return currentIndex === 1
+                        }
+
                         width: 200
 
                         onCurrentIndexChanged: optionsRow.updateList()
@@ -236,6 +345,7 @@ ApplicationWindow {
                 }
 
                 Component.onCompleted: {
+                    crateCheckBox.refresh()
                     categoryCheckBox.refresh()
                 }
             }
@@ -268,7 +378,7 @@ ApplicationWindow {
                     var tracks = trackList.getSelectedTracks()
                     var track = tracks[0]
                     player.play(track.Location)
-                    rateTab.startComparison(track, categoryCheckBox.getCurrentCategory())
+                    rateTab.startComparison(track, categoryCheckBox.getCurrentCategory(), crateCheckBox.getCurrentCrate())
                     tabs.activeTab = 1
                 }
 
@@ -299,21 +409,104 @@ ApplicationWindow {
 
                     MenuItem {
                         text: "Rate"
+                        shortcut: "Ctrl+R"
 
                         onTriggered: {
                             var track = contextMenuTrigger.selectedTrackProxy
                             player.play(track.Location)
-                            rateTab.startComparison(track, categoryCheckBox.getCurrentCategory())
+                            rateTab.startComparison(track, categoryCheckBox.getCurrentCategory(), crateCheckBox.getCurrentCrate())
                             tabs.activeTab = 1
                         }
                     }
 
                     MenuItem {
                         text: "Play"
-                        shortcut: "Ctrl+P"
+                        shortcut: "Enter"
 
                         onTriggered: {
                             player.play(contextMenuTrigger.selectedTrackProxy.Location)
+                        }
+                    }
+
+                    MenuItem {
+                        text: "Remove"
+
+                        onTriggered: {
+                            Database.removeTrack(contextMenuTrigger.selectedTrackProxy.TrackId,
+                                                 contextMenuTrigger.selectedTrackProxy.CrateId)
+                            optionsRow.updateList()
+                        }
+                    }
+                }
+
+                Row {
+                    anchors {
+                        bottom: parent.bottom
+                        bottomMargin: 10
+                        horizontalCenter: parent.horizontalCenter
+                    }
+
+                    spacing: 10
+
+                    Repeater {
+                        model: ["List", "Rate"]
+
+                        delegate: Rectangle {
+                            width: 100
+                            height: 20
+                            radius: 20
+                            color: "#8cf"
+                            opacity: index === tabs.activeTab || mouseArea.containsMouse ? 0.95 : 0.75
+
+                            Text {
+                                anchors.centerIn: parent
+                                color: "white"
+                                font.bold: true
+                                text: modelData
+                            }
+
+                            MouseArea {
+                                id: mouseArea
+                                anchors.fill: parent
+                                cursorShape: "PointingHandCursor"
+                                hoverEnabled: true
+                                onClicked: tabs.activeTab = index
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    id: importOverlay
+
+                    anchors.fill: parent
+                    visible: false
+
+                    Rectangle {
+                        color: "black"
+                        opacity: 0.75
+
+                        anchors.fill: parent
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                    }
+
+                    Column {
+                        anchors.centerIn: parent
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            color: "white"
+                            text: "Crate empty."
+                        }
+
+                        Button {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Add folders"
+
+                            onClicked: importFolderDialog.open()
                         }
                     }
                 }
@@ -329,12 +522,12 @@ ApplicationWindow {
 
             Keys.onDeletePressed: {
                 var tracks = trackList.getSelectedTracks()
+                var crate = crateCheckBox.getCurrentCrate()
 
                 tracks.forEach(function(track) {
-                    Database.removeTrack(track.TrackId)
+                    Database.removeTrack(track.TrackId, crate.CrateId)
                 })
 
-                trackList.clearSelection()
                 optionsRow.updateList()
             }
         }
@@ -350,6 +543,7 @@ ApplicationWindow {
 
             onAllTracksRated: {
                 optionsRow.updateList()
+                ratedCheckBox.select(true)
                 tabs.activeTab = 0
             }
 
@@ -386,43 +580,6 @@ ApplicationWindow {
                 var unratedPlaying = player.source == unrated.Location
                 player.source = unratedPlaying ? rated.Location : unrated.Location
                 player.play()
-            }
-        }
-
-        Row {
-            anchors {
-                bottom: parent.bottom
-                bottomMargin: 10
-                horizontalCenter: parent.horizontalCenter
-            }
-
-            spacing: 10
-
-            Repeater {
-                model: ["List", "Rate"]
-
-                delegate: Rectangle {
-                    width: 100
-                    height: 20
-                    radius: 20
-                    color: "#8cf"
-                    opacity: index === tabs.activeTab || mouseArea.containsMouse ? 0.95 : 0.75
-
-                    Text {
-                        anchors.centerIn: parent
-                        color: "white"
-                        font.bold: true
-                        text: modelData
-                    }
-
-                    MouseArea {
-                        id: mouseArea
-                        anchors.fill: parent
-                        cursorShape: "PointingHandCursor"
-                        hoverEnabled: true
-                        onClicked: tabs.activeTab = index
-                    }
-                }
             }
         }
     }

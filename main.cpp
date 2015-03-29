@@ -5,6 +5,7 @@
 #include "coverimageprovider.h"
 #include "waveformimageprovider.h"
 #include "trackinfoprovider.h"
+#include "filesinfolderprovider.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,6 +20,8 @@ int main(int argc, char *argv[])
     qDebug(engine.offlineStoragePath().toUtf8().constData());
     TrackInfoProvider trackInfoProvider;
     engine.rootContext()->setContextProperty("trackInfoProvider", &trackInfoProvider);
+    FilesInFolderProvider filesInFolderProvider;
+    engine.rootContext()->setContextProperty("filesInFolderProvider", &filesInFolderProvider);
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     return app.exec();
 }

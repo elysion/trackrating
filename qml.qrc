@@ -9,5 +9,8 @@
         <file>ComparisonView.qml</file>
         <file>ImageButton.qml</file>
         <file>ComparisonTrackItem.qml</file>
+        <file>NewCategoryDialog.qml</file>
+        <file>NewCrateDialog.qml</file>
+        <file>QueryDialog.qml</file>
     </qresource>
 </RCC>

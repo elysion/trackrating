@@ -26,6 +26,7 @@ Item {
     property bool playing
 
     property variant category
+    property variant crate
     property string currentTrackLocation
 
     function contains(object, value) {
@@ -36,28 +37,31 @@ Item {
         return false
     }
 
-    function startComparison(unrated, category) {
+    function startComparison(unrated, category, crate) {
         var trackId = unrated.TrackId
         var categoryId = category.CategoryId
+        var crateId = crate.CrateId
 
-        Database.resetRating(trackId, categoryId)
-        Database.ensureRatingExists(trackId, categoryId)
+        Database.resetRating(trackId, categoryId, crateId)
+        Database.ensureRatingExists(trackId, categoryId, crateId)
 
-        Database.initiateCategoryRating(trackId, categoryId, function() {
-            compare(unrated, category)
+        Database.initiateCategoryRating(trackId, categoryId, crateId, function() {
+            compare(unrated, category, crate)
         })
     }
 
-    function compare(unrated, category) {
+    function compare(unrated, category, crate) {
         root.category = category
+        root.crate = crate
 
         var categoryId = category.CategoryId
+        var crateId = crate.CrateId
         var unratedTrackId = unrated.TrackId
 
-        Database.getNextComparisonId(unrated.TrackId, null, category.CategoryId, function(nextId) {
+        Database.getNextComparisonId(unrated.TrackId, null, categoryId, crateId, function(nextId) {
             if (nextId === null) {
                 // TODO: unrated.TrackId not needed?
-                Database.getUnratedTracksFor(categoryId, unrated.TrackId, function(tracks) {
+                Database.getUnratedTracksFor(categoryId, crateId, unrated.TrackId, function(tracks) {
                     var comparison = tracks[Math.floor(tracks.length/2)]
                     setGridTracks(unrated, comparison)
                 })
@@ -76,31 +80,32 @@ Item {
 
     function rateTrack(track, isMoreThan, comparison) {
         var categoryId = root.category.CategoryId
+        var crateId = root.crate.CrateId
         var comparisonId = comparison.TrackId
         var trackId = track.TrackId
 
-        Database.rateTrack(trackId, isMoreThan, comparisonId, categoryId)
+        Database.rateTrack(trackId, isMoreThan, comparisonId, categoryId, crateId)
 
-        Database.getNextComparisonId(trackId, comparisonId, categoryId, function(nextComparison) {
+        Database.getNextComparisonId(trackId, comparisonId, categoryId, crateId, function(nextComparison) {
             if (!nextComparison) {
                 if (isMoreThan) {
-                    Database.rateTrackAbove(trackId, comparisonId, categoryId)
+                    Database.rateTrackAbove(trackId, comparisonId, categoryId, crateId)
                 } else {
-                    Database.rateTrackBelow(trackId, comparisonId, categoryId)
+                    Database.rateTrackBelow(trackId, comparisonId, categoryId, crateId)
                 }
                 // TODO: remove trackId as it is not really used
-                Database.getUnratedTracksFor(categoryId, trackId, function(unrated) {
+                Database.getUnratedTracksFor(categoryId, crateId, trackId, function(unrated) {
                     if (unrated.length === 0) {
                         root.allTracksRated()
-                        notification.show("All tracks rated in terms of \"" + category.Name + "\"")
+                        notification.show("All tracks rated in terms of \"" + category.Name + "\" in " + crate.Name)
                     } else {
                         root.trackRated(track)
                         var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))
-                        startComparison(nextTrackForComparison, category)
+                        startComparison(nextTrackForComparison, category, crate)
                     }
                 })
             } else {
-                compare(track, root.category)
+                compare(track, root.category, root.crate)
             }
         })
     }
@@ -115,7 +120,7 @@ Item {
         }
 
         font.pointSize: 20
-        text: "Rate tracks in terms of \"" + root.category.Name + "\""
+        text: "Rate tracks in terms of \"" + root.category.Name + "\" in " + root.crate.Name
     }
 
     TrackComparison {

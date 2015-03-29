@@ -8,7 +8,9 @@ function clearDatabase() {
         tx.executeSql("DROP TABLE TRACKS")
         tx.executeSql("DROP TABLE RATINGS")
         tx.executeSql("DROP TABLE CATEGORIES")
-    })
+        tx.executeSql("DROP TABLE FOLDERS")
+        tx.executeSql("DROP TABLE CRATES")
+     })
 }
 
 function getDatabase() {
@@ -16,11 +18,28 @@ function getDatabase() {
 
     //create table
     db.transaction(function(tx) {
+        tx.executeSql("CREATE TABLE IF NOT EXISTS CATEGORIES("
+                      + "CategoryId INTEGER PRIMARY KEY, "
+                      + "Name TEXT UNIQUE"
+                      + ")")
+        tx.executeSql("CREATE TABLE IF NOT EXISTS CRATES("
+                      + "CrateId INTEGER PRIMARY KEY, "
+                      + "Name TEXT UNIQUE"
+                      + ")")
+        tx.executeSql("CREATE TABLE IF NOT EXISTS FOLDERS("
+                      + "FolderId INTEGER PRIMARY KEY, "
+                      + "Folder TEXT UNIQUE, "
+                      + "CrateId INTEGER, "
+                      + "FOREIGN KEY(CrateId) REFERENCES CRATES(CrateId)"
+                      + ")")
         tx.executeSql("CREATE TABLE IF NOT EXISTS TRACKS("
                       + "TrackId INTEGER PRIMARY KEY, "
                       + "Artist TEXT, "
                       + "Title TEXT, "
-                      + "Location TEXT UNIQUE"
+                      + "Location TEXT, "
+                      + "CrateId INTEGER, "
+                      + "FOREIGN KEY(CrateId) REFERENCES CRATES(CrateId) "
+                      + "UNIQUE (Location, CrateId) ON CONFLICT IGNORE"
                       + ")")
         tx.executeSql("CREATE TABLE IF NOT EXISTS RATINGS("
                       + "RatingId INTEGER PRIMARY KEY, "
@@ -29,24 +48,23 @@ function getDatabase() {
                       + "MoreThanId INTEGER, "
                       + "LessThanId INTEGER, "
                       + "CategoryId INTEGER, "
-                      + "FOREIGN KEY(TrackId) REFERENCES TRACKS(Id) "
-                      + "FOREIGN KEY(MoreThanId) REFERENCES TRACKS(Id) "
-                      + "FOREIGN KEY(LessThanId) REFERENCES TRACKS(Id) "
-                      + "FOREIGN KEY(CategoryId) REFERENCES CATEGORIES(Id)"
+                      + "CrateId INTEGER, "
+                      + "FOREIGN KEY(TrackId) REFERENCES TRACKS(TrackId) "
+                      + "FOREIGN KEY(MoreThanId) REFERENCES TRACKS(TrackId) "
+                      + "FOREIGN KEY(LessThanId) REFERENCES TRACKS(TrackId) "
+                      + "FOREIGN KEY(CategoryId) REFERENCES CATEGORIES(CategoryId)"
+                      + "FOREIGN KEY(CrateId) REFERENCES CRATES(CrateId)"
                       + ")")
-        tx.executeSql("CREATE TABLE IF NOT EXISTS CATEGORIES("
-                      + "CategoryId INTEGER PRIMARY KEY, "
-                      + "Name TEXT"
-                      + ")")
+        tx.executeSql("INSERT OR IGNORE INTO CRATES (Name) VALUES ('Default')")
     })
 
     return db
 }
 
-function getTracks(sort, filter, callback) {
+function getTracks(crateId, sort, filter, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT * FROM TRACKS ORDER BY ?", sort)
+        var rs = tx.executeSql("SELECT * FROM TRACKS WHERE CrateId = ? ORDER BY ?", [crateId, sort])
         callback(rs.rows)
     })
 }
@@ -54,32 +72,46 @@ function getTracks(sort, filter, callback) {
 function getCategories(callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT DISTINCT(Name), CategoryId FROM CATEGORIES ORDER BY Name")
+        var rs = tx.executeSql("SELECT Name, CategoryId FROM CATEGORIES ORDER BY Name")
         callback(rs.rows)
     })
 }
 
-function getRatedTracksFor(categoryId, callback) {
+function getCrates(callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT TRACKS.*, RATINGS.*, TRACKS.TrackId AS TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ? AND RATINGS.MoreThanId IS NULL AND RATINGS.LessThanId IS NULL AND RATINGS.Rating IS NOT NULL ORDER BY Rating DESC", [categoryId])
+        var rs = tx.executeSql("SELECT Name, CrateId FROM CRATES ORDER BY Name")
         callback(rs.rows)
     })
 }
 
-function getUnratedTracksFor(categoryId, excludeTrackId, callback) {
+function getRatedTracksFor(categoryId, crateId, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT TRACKS.* FROM TRACKS WHERE TRACKS.TrackId IS NOT ? AND TRACKS.TrackId NOT IN (SELECT TRACKS.TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ? AND RATINGS.Rating IS NOT NULL)", [excludeTrackId, categoryId])
+        var rs = tx.executeSql("SELECT TRACKS.*, RATINGS.*, TRACKS.TrackId AS TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE TRACKS.CrateId IS ? AND RATINGS.CrateId IS ? AND RATINGS.CategoryId IS ? AND RATINGS.MoreThanId IS NULL AND RATINGS.LessThanId IS NULL AND RATINGS.Rating IS NOT NULL ORDER BY Rating DESC", [crateId, crateId, categoryId])
         callback(rs.rows)
     })
 }
 
-function addOrReplaceTrack(artist, title, location) {
+function getUnratedTracksFor(categoryId, crateId, excludeTrackId, callback) {
+    var db = getDatabase();
+    db.transaction(function(tx) {
+        var rs = tx.executeSql("SELECT TRACKS.* FROM TRACKS WHERE TRACKS.TrackId IS NOT ? AND TRACKS.CrateId IS ? AND TRACKS.TrackId NOT IN (SELECT TRACKS.TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ? AND RATINGS.CrateId IS ? AND RATINGS.Rating IS NOT NULL)", [excludeTrackId, crateId, categoryId, crateId])
+        callback(rs.rows)
+    })
+}
+
+function addTrack(artist, title, location, crateId) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        tx.executeSql("DELETE FROM TRACKS WHERE Location = ?", location)
-        tx.executeSql("INSERT INTO TRACKS (Artist, Title, Location) VALUES (?,?,?)", [artist, title, location])
+        tx.executeSql("INSERT OR IGNORE INTO TRACKS (Artist, Title, Location, CrateId) VALUES (?,?,?,?)", [artist, title, location, crateId])
+    })
+}
+
+function addFolder(folder, crateId) {
+    var db = getDatabase()
+    db.transaction(function(tx) {
+        tx.executeSql("INSERT OR IGNORE INTO FOLDERS (Folder, CrateId) VALUES (?,?)", [folder, crateId])
     })
 }
 
@@ -90,55 +122,62 @@ function createCategory(name) {
     })
 }
 
-function setTrackRating(trackId, categoryId, rating) {
+function createCrate(name) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        incrementRatings(categoryId, rating, function() {
-            tx.executeSql("DELETE FROM RATINGS WHERE TrackId = ? AND CategoryId = ?", [trackId, categoryId])
-            tx.executeSql("INSERT INTO RATINGS (TrackId, CategoryId, Rating) VALUES (?, ?, ?)", [trackId, categoryId, rating])
+        tx.executeSql("INSERT INTO CRATES (Name) VALUES (?)", [name])
+    })
+}
+
+function setTrackRating(trackId, categoryId, crateId, rating) {
+    var db = getDatabase()
+    db.transaction(function(tx) {
+        incrementRatings(categoryId, crateId, rating, function() {
+            tx.executeSql("DELETE FROM RATINGS WHERE TrackId = ? AND CategoryId = ? AND CrateId = ?", [trackId, categoryId, crateId])
+            tx.executeSql("INSERT INTO RATINGS (TrackId, CategoryId, CrateId, Rating) VALUES (?, ?, ?, ?)", [trackId, categoryId, crateId, rating])
         })
     })
 }
 
-function rateTrack(trackId, isMoreThan, comparisonId, categoryId) {
+function rateTrack(trackId, isMoreThan, comparisonId, categoryId, crateId) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        tx.executeSql("UPDATE RATINGS SET " + (isMoreThan ? "MoreThanId" : "LessThanId") + "=? WHERE TrackId=? AND CategoryId=?", [comparisonId, trackId, categoryId])
+        tx.executeSql("UPDATE RATINGS SET " + (isMoreThan ? "MoreThanId" : "LessThanId") + "=? WHERE TrackId=? AND CategoryId=? AND CrateId=?", [comparisonId, trackId, categoryId, crateId])
     })
 }
 
-function rateTrackAbove(trackId, comparisonId, categoryId) {
-    getTrackRating(comparisonId, categoryId, function(ratingInfo) {
-        setTrackRating(trackId, categoryId, ratingInfo.Rating + 1)
+function rateTrackAbove(trackId, comparisonId, categoryId, crateId) {
+    getTrackRating(comparisonId, categoryId, crateId, function(ratingInfo) {
+        setTrackRating(trackId, categoryId, crateId, ratingInfo.Rating + 1)
     })
 }
 
-function rateTrackBelow(trackId, comparisonId, categoryId) {
-    getTrackRating(comparisonId, categoryId, function(ratingInfo) {
-        setTrackRating(trackId, categoryId, ratingInfo.Rating)
+function rateTrackBelow(trackId, comparisonId, categoryId, crateId) {
+    getTrackRating(comparisonId, categoryId, crateId, function(ratingInfo) {
+        setTrackRating(trackId, categoryId, crateId, ratingInfo.Rating)
     })
 }
 
-function updateRatings(categoryId, fromRating, delta, callback) {
+function updateRatings(categoryId, crateId, fromRating, delta, callback) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        tx.executeSql("UPDATE RATINGS SET Rating=Rating+? WHERE CategoryId=? AND Rating>=?", [delta, categoryId, fromRating])
+        tx.executeSql("UPDATE RATINGS SET Rating=Rating+? WHERE CrateId=? AND CategoryId=? AND Rating>=?", [delta, crateId, categoryId, fromRating])
         if (callback) callback()
     })
 }
 
-function incrementRatings(categoryId, fromRating, callback) {
-    updateRatings(categoryId, fromRating, 1, callback)
+function incrementRatings(categoryId, crateId, fromRating, callback) {
+    updateRatings(categoryId, crateId, fromRating, 1, callback)
 }
 
-function decrementRatings(categoryId, fromRating, callback) {
-    updateRatings(categoryId, fromRating, -1, callback)
+function decrementRatings(categoryId, crateId, fromRating, callback) {
+    updateRatings(categoryId, crateId, fromRating, -1, callback)
 }
 
-function getTrackRating(trackId, categoryId, callback) {
+function getTrackRating(trackId, categoryId, crateId, callback) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        var results = tx.executeSql("SELECT TRACKS.*, RATINGS.* FROM TRACKS LEFT JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE TRACKS.TrackId = ? AND RATINGS.CategoryId = ?", [trackId, categoryId])
+        var results = tx.executeSql("SELECT TRACKS.*, RATINGS.* FROM TRACKS LEFT JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE TRACKS.TrackId = ? AND RATINGS.CategoryId = ? AND RATINGS.CrateId = ? AND TRACKS.CrateId = ?", [trackId, categoryId, crateId, crateId])
         if (results.rows.length === 1) {
             callback(results.rows.item(0))
         } else {
@@ -148,29 +187,30 @@ function getTrackRating(trackId, categoryId, callback) {
 }
 
 // TODO: remove trackId if not used?
-function getNextComparisonId(trackId, comparisonId, categoryId, callback) {
+function getNextComparisonId(trackId, comparisonId, categoryId, crateId, callback) {
     var db = getDatabase()
 
     db.transaction(function(tx) {
-        var trackRating = getTrackRating(trackId, categoryId, function(track) {
+        var trackRating = getTrackRating(trackId, categoryId, crateId, function(track) {
             if (!track) {
                 throw("Error fetching track rating information")
             }
 
-            getTrackRating(track.LessThanId, categoryId, function(lessThanRating) {
-                getTrackRating(track.MoreThanId, categoryId, function(moreThanRating) {
+            getTrackRating(track.LessThanId, categoryId, crateId, function(lessThanRating) {
+                getTrackRating(track.MoreThanId, categoryId, crateId, function(moreThanRating) {
                     var lessThanStatement = lessThanRating !== undefined ? "AND RATINGS.Rating < " + lessThanRating.Rating : ""
                     var moreThanStatement = moreThanRating !== undefined ? "AND RATINGS.Rating > " + moreThanRating.Rating : ""
 
                     var tracksInBetween = tx.executeSql("SELECT TRACKS.TrackId FROM TRACKS LEFT JOIN RATINGS ON TRACKS.TrackId = RATINGS.TrackId "
                                                         + "WHERE RATINGS.CategoryId = ? "
+                                                        + "AND RATINGS.CrateId = ?"
                                                         + "AND RATINGS.LessThanId IS NULL "
                                                         + "AND RATINGS.MoreThanId IS NULL "
                                                         + "AND RATING IS NOT NULL "
                                                         + "AND TRACKS.TrackId IS NOT ?"
                                                         + lessThanStatement + " "
                                                         + moreThanStatement,
-                                                        [categoryId, comparisonId])
+                                                        [categoryId, crateId, comparisonId])
 
                     if (tracksInBetween.rows.length === 0) {
                         callback(null)
@@ -183,13 +223,13 @@ function getNextComparisonId(trackId, comparisonId, categoryId, callback) {
     })
 }
 
-function ensureRatingExists(trackId, categoryId) {
+function ensureRatingExists(trackId, categoryId, crateId) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        var trackExists = tx.executeSql("SELECT RatingId FROM RATINGS WHERE TrackId=? AND CategoryId=?", [trackId, categoryId])
+        var trackExists = tx.executeSql("SELECT RatingId FROM RATINGS WHERE TrackId=? AND CategoryId=? AND CrateId=?", [trackId, categoryId, crateId])
 
         if (trackExists.rows.length === 0) {
-            tx.executeSql("INSERT INTO RATINGS (TrackId, CategoryId) VALUES (?, ?)", [trackId, categoryId])
+            tx.executeSql("INSERT INTO RATINGS (TrackId, CategoryId, CrateId) VALUES (?, ?, ?)", [trackId, categoryId, crateId])
         }
     })
 }
@@ -197,7 +237,7 @@ function ensureRatingExists(trackId, categoryId) {
 function getTrackInfo(trackId, callback) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        var result = tx.executeSql("SELECT TRACKS.*, RATINGS.*, TRACKS.TrackId AS TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON TRACKS.TrackId = RATINGS.TrackId WHERE TRACKS.TrackId = ?", [trackId])
+        var result = tx.executeSql("SELECT TRACKS.* FROM TRACKS WHERE TRACKS.TrackId = ?", [trackId])
 
         if (result.rows.length === 0) {
             throw("Track not found for id " + trackId)
@@ -207,15 +247,15 @@ function getTrackInfo(trackId, callback) {
     })
 }
 
-function initiateCategoryRating(trackId, categoryId, callback) {
-    getRatedTracksFor(categoryId, function(rated) {
+function initiateCategoryRating(trackId, categoryId, crateId, callback) {
+    getRatedTracksFor(categoryId, crateId, function(rated) {
         if (rated.length === 0) {
-            getUnratedTracksFor(categoryId, trackId, function(unrated) {
+            getUnratedTracksFor(categoryId, crateId, trackId, function(unrated) {
                 var referenceTrack = unrated.item(Math.floor(unrated.length/2))
 
                 var db = getDatabase()
                 db.transaction(function(tx) {
-                    tx.executeSql("INSERT INTO RATINGS (TrackId, CategoryId, Rating) VALUES (?, ?, 1)", [referenceTrack.TrackId, categoryId])
+                    tx.executeSql("INSERT INTO RATINGS (TrackId, CategoryId, CrateId, Rating) VALUES (?, ?, ?, 1)", [referenceTrack.TrackId, categoryId, crateId])
                     callback()
                 })
             })
@@ -225,24 +265,24 @@ function initiateCategoryRating(trackId, categoryId, callback) {
     })
 }
 
-function resetRating(trackId, categoryId) {
+function resetRating(trackId, categoryId, crateId) {
     var db = getDatabase()
     db.transaction(function(tx) {
-        getTrackRating(trackId, categoryId, function(track) {
-            tx.executeSql("DELETE FROM RATINGS WHERE TrackId=? AND CategoryId=?", [trackId, categoryId])
+        getTrackRating(trackId, categoryId, crateId, function(track) {
+            tx.executeSql("DELETE FROM RATINGS WHERE TrackId=? AND CategoryId=? AND CrateId=?", [trackId, categoryId, crateId])
             if (track && track.Rating) {
-                decrementRatings(categoryId, track.Rating)
+                decrementRatings(categoryId, crateId, track.Rating)
             }
         })
     })
 }
 
-function removeTrack(trackId) {
+function removeTrack(trackId, crateId) {
     if (trackId) {
         var db = getDatabase()
         db.transaction(function(tx) {
-            tx.executeSql("DELETE FROM RATINGS WHERE TrackId=?", trackId)
-            tx.executeSql("DELETE FROM TRACKS WHERE TrackId=?", trackId)
+            tx.executeSql("DELETE FROM RATINGS WHERE TrackId=? AND CrateId=?", [trackId, crateId])
+            tx.executeSql("DELETE FROM TRACKS WHERE TrackId=? AND CrateId=?", [trackId, crateId])
         })
     }
 }

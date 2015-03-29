@@ -7,7 +7,8 @@ LIBS += -ltag
 SOURCES += main.cpp \
     coverimageprovider.cpp \
     waveformimageprovider.cpp \
-    trackinfoprovider.cpp
+    trackinfoprovider.cpp \
+    filesinfolderprovider.cpp
 
 RESOURCES += qml.qrc \
     images.qrc
@@ -21,11 +22,12 @@ include(deployment.pri)
 HEADERS += \
     coverimageprovider.h \
     waveformimageprovider.h \
-    trackinfoprovider.h
+    trackinfoprovider.h \
+    filesinfolderprovider.h
 
-unix: LIBS += -L/usr/local/Cellar/taglib/1.9.1/lib/ -ltag -L/usr/local/Cellar/mpg123/1.20.1/lib/ -lmpg123
+unix: LIBS += -L/usr/local/Cellar/taglib/1.9.1/lib/ -ltag -L/usr/local/Cellar/mpg123/1.21.0/lib/ -lmpg123
 
 INCLUDEPATH += /usr/local/Cellar/taglib/1.9.1/include/
-INCLUDEPATH += /usr/local/Cellar/mpg123/1.20.1/include/
+INCLUDEPATH += /usr/local/Cellar/mpg123/1.21.0/include/
 
 DISTFILES +=
