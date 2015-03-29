@@ -82,20 +82,10 @@ Item {
                 onClicked: root.clicked(modelData)
             }
 
-            Image {
-                anchors.centerIn: parent
-
-                width: 75
-                height: 75
-                source: "qrc:/images/spinner.png"
+            Spinner {
+                id: spinner
                 visible: root.playing
-
-                RotationAnimation on rotation {
-                    loops: Animation.Infinite
-                    from: 0
-                    to: 360
-                    duration: 1000
-                }
+                anchors.centerIn: parent
             }
         }
 

@@ -17,5 +17,7 @@
         <file>Notification.qml</file>
         <file>ImportOverlay.qml</file>
         <file>TabSelector.qml</file>
+        <file>StatusNotification.qml</file>
+        <file>Spinner.qml</file>
     </qresource>
 </RCC>
