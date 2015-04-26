@@ -4,10 +4,10 @@
 #include <QMediaPlayer>
 
 #include <taglib/fileref.h>
-#include <taglib/tstring.h>
-#include <taglib/id3v2tag.h>
-#include <taglib/mpegfile.h>
-#include <taglib/attachedpictureframe.h>
+#include <tstring.h>
+#include <id3v2tag.h>
+#include <mpegfile.h>
+#include <attachedpictureframe.h>
 
 CoverImageProvider::CoverImageProvider()
     : QQuickImageProvider(QQuickImageProvider::Image)

@@ -2,7 +2,8 @@ TEMPLATE = app
 
 QT += qml quick widgets sql multimedia svg
 
-LIBS += -ltag
+CONFIG += console
+LIBS += -ltag -lmpg123-0
 
 SOURCES += main.cpp \
     coverimageprovider.cpp \
@@ -27,9 +28,14 @@ HEADERS += \
     filesinfolderprovider.h \
     threadedtrackinfoprovider.h
 
-unix: LIBS += -L/usr/local/Cellar/taglib/1.9.1/lib/ -ltag -L/usr/local/Cellar/mpg123/1.21.0/lib/ -lmpg123
+LIBS += -LC:\Users\elysion\Documents\Projects\trackrating\mpg123-1.22.0-x86 -LC:\Users\elysion\Documents\Projects\trackrating\taglib-1.9.1\taglib
 
-INCLUDEPATH += /usr/local/Cellar/taglib/1.9.1/include/
-INCLUDEPATH += /usr/local/Cellar/mpg123/1.21.0/include/
+INCLUDEPATH += ./taglib-1.9.1/
+INCLUDEPATH += ./taglib-1.9.1/taglib/
+INCLUDEPATH += ./taglib-1.9.1/taglib/toolkit/
+INCLUDEPATH += ./taglib-1.9.1/taglib/mpeg/id3v2/
+INCLUDEPATH += ./taglib-1.9.1/taglib/mpeg/id3v2/frames/
+INCLUDEPATH += ./taglib-1.9.1/taglib/mpeg/
+INCLUDEPATH += ./mpg123-1.22.0-x86/
 
 DISTFILES +=

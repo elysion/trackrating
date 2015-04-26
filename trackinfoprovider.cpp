@@ -1,8 +1,8 @@
 #include "trackinfoprovider.h"
 #include <taglib/fileref.h>
-#include <taglib/tstring.h>
-#include <taglib/id3v2tag.h>
-#include <taglib/mpegfile.h>
+#include <tstring.h>
+#include <id3v2tag.h>
+#include <mpegfile.h>
 #include <QFileInfo>
 #include <QDebug>
 
