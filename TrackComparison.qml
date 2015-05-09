@@ -22,7 +22,7 @@ Item {
 
     property variant comparedTrack
     property real cellWidth: {
-        var proposedWidth = width / tracks.length
+        var proposedWidth = tracks ? width / tracks.length : height
         return proposedWidth < height ? proposedWidth : height
     }
 
