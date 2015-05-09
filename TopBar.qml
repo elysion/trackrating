@@ -16,6 +16,7 @@ RowLayout {
     property bool rated
 
     signal noCategories
+    signal exportAsPlaylist
 
     function selectRated(rated) {
         ratedCheckBox.currentIndex = rated ? 1 : 0
@@ -42,6 +43,8 @@ RowLayout {
         right: parent.right
         margins: 10
     }
+
+    height: crateSelect.height + (anchors.margins * 2)
     
     Row {
         id: optionsRow
@@ -55,6 +58,7 @@ RowLayout {
         
         ComboBox {
             id: crateSelect
+            anchors.verticalCenter: parent.verticalCenter
             
             function select(crate) {
                 for (var i = 0; i < model.count; ++i) {
@@ -97,6 +101,7 @@ RowLayout {
         
         ComboBox {
             id: categorySelect
+            anchors.verticalCenter: parent.verticalCenter
 
             function select(name) {
                 for (var i = 0; i < model.count; ++i) {
@@ -150,11 +155,24 @@ RowLayout {
         
         ComboBox {
             id: ratedCheckBox
+            anchors.verticalCenter: parent.verticalCenter
             
             width: 200
             model: ["Unrated", "Rated"]
 
             onCurrentIndexChanged: root.rated = currentIndex === 1
+        }
+
+        Rectangle {
+            color: "black"
+            opacity: 0.5
+            height: parent.height
+            width: 1
+        }
+
+        Button {
+            text: "Export as playlist"
+            onClicked: root.exportAsPlaylist()
         }
     }
     

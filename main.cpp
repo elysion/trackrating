@@ -8,6 +8,10 @@
 #include "trackinfoprovider.h"
 #include "filesinfolderprovider.h"
 #include "threadedtrackinfoprovider.h"
+#include "fileio.h"
+
+#include "file-dialog/fileopendialog.h"
+#include "file-dialog/filesavedialog.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,6 +25,13 @@ int main(int argc, char *argv[])
     engine.addImageProvider(QLatin1String("cover"), new CoverImageProvider);
     qDebug(engine.offlineStoragePath().toUtf8().constData());
     qmlRegisterType<ThreadedTrackInfoProvider>("trackrating", 1, 0, "ThreadedTrackInfoProvider");
+
+    qmlRegisterType<FileOpenDialog>("FileDialog", 1, 0, "FileOpenDialog");
+    qmlRegisterType<FileSaveDialog>("FileDialog", 1, 0, "FileSaveDialog");
+
+    FileIO fileIO;
+    engine.rootContext()->setContextProperty("FileIO", &fileIO);
+
     TrackInfoProvider trackInfoProvider;
     engine.rootContext()->setContextProperty("trackInfoProvider", &trackInfoProvider);
     FilesInFolderProvider filesInFolderProvider;

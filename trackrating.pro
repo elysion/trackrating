@@ -2,6 +2,11 @@ TEMPLATE = app
 
 QT += qml quick widgets sql multimedia svg
 
+# For file-dialog
+QT += core-private
+QT += gui-private
+QT += widgets
+
 LIBS += -ltag
 
 SOURCES += main.cpp \
@@ -9,7 +14,9 @@ SOURCES += main.cpp \
     waveformimageprovider.cpp \
     trackinfoprovider.cpp \
     filesinfolderprovider.cpp \
-    threadedtrackinfoprovider.cpp
+    threadedtrackinfoprovider.cpp \
+    file-dialog/fileopendialog.cpp \
+    file-dialog/filesavedialog.cpp
 
 RESOURCES += qml.qrc \
     images.qrc
@@ -25,7 +32,10 @@ HEADERS += \
     waveformimageprovider.h \
     trackinfoprovider.h \
     filesinfolderprovider.h \
-    threadedtrackinfoprovider.h
+    threadedtrackinfoprovider.h \
+    file-dialog/fileopendialog.h \
+    file-dialog/filesavedialog.h \
+    fileio.h
 
 unix: LIBS += -L/usr/local/Cellar/taglib/1.9.1/lib/ -ltag -L/usr/local/Cellar/mpg123/1.21.0/lib/ -lmpg123
 

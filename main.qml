@@ -8,6 +8,7 @@ import QtGraphicalEffects 1.0
 import Qt.labs.settings 1.0
 import "database.js" as Database
 import trackrating 1.0
+import FileDialog 1.0
 
 ApplicationWindow {
     id: root
@@ -56,6 +57,17 @@ ApplicationWindow {
     function addFolder(folder) {
         var tracks = filesInFolderProvider.getFiles(folder)
         addTracks(tracks)
+    }
+
+    function exportPlaylist(file) {
+        var tracks = []
+        for (var i = 0; i < trackListModel.count; ++i) {
+            tracks.push(trackListModel.get(i).Location)
+        }
+
+        var playlist = tracks.join("\n")
+        console.log(file, playlist)
+        FileIO.write(file, playlist)
     }
 
     menuBar: ApplicationMenu {
@@ -132,6 +144,13 @@ ApplicationWindow {
         }
     }
 
+    FileSaveDialog {
+        id: exportPlaylistDialog
+        onAccepted: {
+            root.exportPlaylist(fileUrl)
+        }
+    }
+
     ListModel {
         id: trackListModel
 
@@ -171,6 +190,21 @@ ApplicationWindow {
             }
         }
 
+        Action {
+            id: exportAction
+            text: "&Export"
+            shortcut: "Ctrl+E"
+            onTriggered: {
+                exportPlaylistDialog.filename = [
+                            sortBar.crate.Name,
+                            sortBar.category.Name,
+                            (sortBar.rated ? "Rated" : "Unrated")
+                        ].join("_") + ".m3u"
+
+                exportPlaylistDialog.open()
+            }
+        }
+
         Item {
             anchors.fill: parent
             visible: tabs.activeTab === 0
@@ -187,6 +221,7 @@ ApplicationWindow {
                 onCategoryChanged: updateList()
                 onCrateChanged: updateList()
                 onRatedChanged: updateList()
+                onExportAsPlaylist: exportAction.trigger()
 
                 function updateList() {
                     if (crate === undefined) return
