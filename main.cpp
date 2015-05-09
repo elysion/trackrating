@@ -2,6 +2,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQmlComponent>
+#include <QDebug>
 
 #include "coverimageprovider.h"
 #include "waveformimageprovider.h"
@@ -23,7 +24,8 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.addImageProvider(QLatin1String("waveform"), new WaveformImageProvider);
     engine.addImageProvider(QLatin1String("cover"), new CoverImageProvider);
-    qDebug(engine.offlineStoragePath().toUtf8().constData());
+    qDebug() << engine.offlineStoragePath();
+
     qmlRegisterType<ThreadedTrackInfoProvider>("trackrating", 1, 0, "ThreadedTrackInfoProvider");
 
     qmlRegisterType<FileOpenDialog>("FileDialog", 1, 0, "FileOpenDialog");
