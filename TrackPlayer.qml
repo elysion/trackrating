@@ -55,7 +55,7 @@ Item {
     Image {
         id: bgWaveform
         
-        opacity: root.playing ? 0.5 : 0.25
+        opacity: root.playing ? 0.25 : 0.1
         source: "image://waveform/"+player.source
         smooth: false
         
