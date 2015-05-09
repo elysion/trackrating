@@ -51,7 +51,7 @@ ApplicationWindow {
         statusNotification.show('Importing tracks')
 
         threadedTrackInfoProvider.crateId = sortBar.crate.CrateId
-        threadedTrackInfoProvider.getTrackInfo(Array.prototype.slice.call(urls))
+        threadedTrackInfoProvider.getTrackInfo(toArray(urls))
     }
 
     function addFolder(folder) {
@@ -70,6 +70,43 @@ ApplicationWindow {
         FileIO.write(file, playlist)
     }
 
+    function startsWith(needle, haystack) {
+        return haystack.toString().substr(0, needle.length) === needle
+    }
+
+    function isEmpty(str) {
+        return str.toString().trim().length === 0
+    }
+
+    function not(predicate) {
+        return function (/*arguments*/) {
+            var args = toArray(arguments)
+            return !predicate.apply(this, args)
+        }
+    }
+
+    function and(/*predicates*/) {
+        var predicates = toArray(arguments)
+
+        return function (/*arguments*/) {
+            var args = toArray(arguments)
+            return predicates.reduce(function (memo, predicate) {
+                return memo && predicate.apply(null, args)
+            }, true)
+        }
+    }
+
+    function toArray(arrayLike) {
+        return Array.prototype.slice.call(arrayLike)
+    }
+
+    function importPlaylist(file) {
+        var files = FileIO.read(file).filter(and(not(isEmpty), not(startsWith.bind(null, '#'))))
+        if (files.length > 0) {
+            root.addTracks(files)
+        }
+    }
+
     menuBar: ApplicationMenu {
         onClearDatabase: {
             Database.clearDatabase()
@@ -84,6 +121,10 @@ ApplicationWindow {
 
         onImportFiles: {
             importFilesDialog.open()
+        }
+
+        onImportPlaylist: {
+            importPlaylistDialog.open()
         }
 
         onAddCategory: {
@@ -129,6 +170,7 @@ ApplicationWindow {
     FileDialog {
         id: importFolderDialog
         selectFolder: true
+        title: "Import folder"
 
         onAccepted: {
             root.addFolder(folder)
@@ -139,8 +181,20 @@ ApplicationWindow {
         id: importFilesDialog
         selectMultiple: true
         nameFilters: [ "Audio files (*.mp3)" ]
+        title: "Import files"
+
         onAccepted: {
             root.addTracks(fileUrls)
+        }
+    }
+
+    FileDialog {
+        id: importPlaylistDialog
+        nameFilters: [ "Playlist files (*.m3u)" ]
+        title: "Import playlist"
+
+        onAccepted: {
+            root.importPlaylist(fileUrl)
         }
     }
 

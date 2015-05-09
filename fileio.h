@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QFile>
 #include <QTextStream>
+#include <QChar>
 #include <QDebug>
 
 class FileIO : public QObject
@@ -30,6 +31,25 @@ public slots:
         out << data;
         file.close();
         return true;
+    }
+
+    QStringList read(const QString& location)
+    {
+        QString fileLocation = QString(location).remove("file://");
+        QString contents;
+
+        QFile file( fileLocation );
+        if ( file.open(QFile::ReadOnly ) ) {
+            QTextStream inStream(&file);
+            contents = inStream.readAll();
+        }
+        file.close();
+
+        if (contents.indexOf("\r\n") != -1) {
+            return contents.split("\r\n");
+        } else {
+            return contents.split(contents.indexOf('\r') != -1 ? '\r' : '\n');
+        }
     }
 
 public:

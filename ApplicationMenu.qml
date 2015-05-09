@@ -9,6 +9,7 @@ MenuBar {
     signal addCrate
     signal importFiles
     signal importFolder
+    signal importPlaylist
     signal exit
 
     Menu {
@@ -20,6 +21,10 @@ MenuBar {
         MenuItem {
             text: qsTr("Import f&older")
             onTriggered: root.importFolder()
+        }
+        MenuItem {
+            text: qsTr("Import &playlist")
+            onTriggered: root.importPlaylist()
         }
         MenuItem {
             text: qsTr("Clear database")
