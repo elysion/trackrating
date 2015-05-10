@@ -165,7 +165,7 @@ Item {
                 width: 30
                 height: width
                 onClicked: root.toggle()
-                source: "qrc:/images/play.png"
+                source: root.playing ? "qrc:/images/pause.png" : "qrc:/images/play.png"
                 smooth: true
             }
             PlayerButton {
