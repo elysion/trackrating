@@ -100,7 +100,7 @@ Item {
                         notification.show("All tracks rated in terms of \"" + category.Name + "\" in " + crate.Name)
                     } else {
                         root.trackRated(track)
-                        var nextTrackForComparison = unrated.item(Math.floor(unrated.length/2))
+                        var nextTrackForComparison = unrated[(Math.floor(unrated.length/2))]
                         startComparison(nextTrackForComparison, category, crate)
                     }
                 })

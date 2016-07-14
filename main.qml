@@ -138,6 +138,9 @@ ApplicationWindow {
             Database.getCrates(function(crates) {
                 newCrateDialog.open()
             })
+
+        onAddTag: {
+            newTagDialog.open()
         }
 
         onExit: Qt.quit()
@@ -161,7 +164,21 @@ ApplicationWindow {
         onAccepted: {
             Database.createCrate(queryResult)
             sortBar.refresh()
+            sortBar.selectCrateFilter()
             sortBar.selectCrate(queryResult)
+            queryResult = ""
+            trackListModel.refresh()
+        }
+    }
+
+    NewTagDialog {
+        id: newTagDialog
+
+        onAccepted: {
+            Database.createTag(queryResult)
+            sortBar.refresh()
+            sortBar.selectTagFilter()
+            sortBar.selectTag(queryResult)
             queryResult = ""
             trackListModel.refresh()
         }
@@ -209,6 +226,7 @@ ApplicationWindow {
         id: trackListModel
 
         function refresh(sort, filter) {
+            // TODO: fetch rated / unrated & sort
             var crate = sortBar.crate
             Database.getTracks(crate.CrateId, sort || "Artist", filter || "", function(results) {
                 showTracksFromDbResults(results)
@@ -219,7 +237,7 @@ ApplicationWindow {
             clear()
 
             for (var i = 0; i < results.length; ++i) {
-                append(results.item(i))
+                append(results[i])
             }
 
             importOverlay.refresh()
@@ -311,18 +329,18 @@ ApplicationWindow {
                 }
 
                 onDoubleClicked: {
-                    player.play(model.get(row).Location)
+                    player.play(model.get(row))
                 }
 
                 onReturnClicked: {
                     var tracks = trackList.getSelectedTracks()
-                    player.play(tracks[0].Location)
+                    player.play(tracks[0])
                 }
 
                 function startRatingCurrentlySelectedTrack() {
                     var tracks = trackList.getSelectedTracks()
                     var track = tracks[0]
-                    player.play(track.Location)
+                    player.play(track)
                     rateTab.startComparison(track, sortBar.category, sortBar.crate)
                     tabs.activeTab = 1
                 }
@@ -357,7 +375,7 @@ ApplicationWindow {
 
                         onTriggered: {
                             var track = contextMenuTrigger.selectedTrackProxy
-                            player.play(track.Location)
+                            player.play(track)
                             rateTab.startComparison(track, sortBar.category, sortBar.crate)
                             tabs.activeTab = 1
                         }
@@ -368,7 +386,7 @@ ApplicationWindow {
                         shortcut: "Enter"
 
                         onTriggered: {
-                            player.play(contextMenuTrigger.selectedTrackProxy.Location)
+                            player.play(contextMenuTrigger.selectedTrackProxy)
                         }
                     }
 
@@ -415,6 +433,22 @@ ApplicationWindow {
 
                 sortBar.updateList()
             }
+
+            Keys.onDigit1Pressed: {
+                player.addTag(0)
+            }
+
+            Keys.onDigit2Pressed: {
+                player.addTag(1)
+            }
+
+            Keys.onDigit3Pressed: {
+                player.addTag(2)
+            }
+
+            Keys.onDigit4Pressed: {
+                player.addTag(3)
+            }
         }
 
         ComparisonView {
@@ -423,7 +457,7 @@ ApplicationWindow {
             anchors.fill: parent
             visible: tabs.activeTab === 1
             focus: visible
-            currentTrackLocation: player.source
+            currentTrackLocation: player.track.Location
             playing: player.playing
 
             onAllTracksRated: {
@@ -432,12 +466,12 @@ ApplicationWindow {
                 tabs.activeTab = 0
             }
 
-            onTrackClicked: player.play(track.Location)
+            onTrackClicked: player.play(track)
 
             onComparingTracks: {
-                if (player.source !== rated.Location &&
-                        player.source !== unrated.Location) {
-                    player.play(unrated.Location)
+                if (player.track.Location !== rated.Location &&
+                        player.track.Location !== unrated.Location) {
+                    player.play(unrated)
                 }
             }
 
@@ -462,9 +496,25 @@ ApplicationWindow {
             }
 
             Keys.onTabPressed: {
-                var unratedPlaying = player.source == unrated.Location
-                player.source = unratedPlaying ? rated.Location : unrated.Location
+                var unratedPlaying = player.track.Location === unrated.Location
+                player.track = unratedPlaying ? rated : unrated
                 player.play()
+            }
+
+            Keys.onDigit1Pressed: {
+                player.addTag(0)
+            }
+
+            Keys.onDigit2Pressed: {
+                player.addTag(1)
+            }
+
+            Keys.onDigit3Pressed: {
+                player.addTag(2)
+            }
+
+            Keys.onDigit4Pressed: {
+                player.addTag(3)
             }
         }
 
@@ -486,6 +536,15 @@ ApplicationWindow {
         }
 
         height: 200
+
+        function addTag(index) {
+            var tag = player.getTag(index)
+            if (tag) {
+                Database.addTag(player.track, tag)
+                player.updateTags()
+                trackListModel.refresh()
+            }
+        }
     }
 
     DropArea {

@@ -16,7 +16,6 @@ function clearDatabase() {
 function getDatabase() {
     var db = Sql.LocalStorage.openDatabaseSync("Ratings", "1.0", "Track rating database", 100000)
 
-    //create table
     db.transaction(function(tx) {
         tx.executeSql("CREATE TABLE IF NOT EXISTS CATEGORIES("
                       + "CategoryId INTEGER PRIMARY KEY, "
@@ -56,17 +55,47 @@ function getDatabase() {
                       + "FOREIGN KEY(CategoryId) REFERENCES CATEGORIES(CategoryId)"
                       + "FOREIGN KEY(CrateId) REFERENCES CRATES(CrateId)"
                       + ")")
+        tx.executeSql("CREATE TABLE IF NOT EXISTS TAGS("
+                      + "TagId INTEGER PRIMARY KEY, "
+                      + "Name TEXT UNIQUE, "
+                      + "CHECK(Name <> '')"
+                      + ")")
+        tx.executeSql("CREATE TABLE IF NOT EXISTS TRACK_TAGS("
+                      + "TrackId INTEGER, "
+                      + "TagId INTEGER, "
+                      + "FOREIGN KEY(TrackId) REFERENCES TRACKS(TrackId) "
+                      + "FOREIGN KEY(TagId) REFERENCES TAGS(TagId) "
+                      + "UNIQUE (TrackId, TagId)"
+                      + ")")
+
         tx.executeSql("INSERT OR IGNORE INTO CRATES (Name) VALUES ('Default')")
     })
 
     return db
 }
 
+function toArray(arrayLike) {
+    return Array.prototype.slice.call(arrayLike)
+}
+
+function decorateWithTags(track) {
+    var db = getDatabase();
+    db.transaction(function(tx) {
+        var rs = tx.executeSql("SELECT Name FROM TAGS NATURAL JOIN TRACK_TAGS WHERE TrackId = ?", [track.TrackId])
+        track["Tags"] = toArray(rs.rows).map(function(row) { return row.Name }).join(", ")
+    })
+    return track
+}
+
+function decorateTracksWithTags(tracks) {
+    return tracks.map(decorateWithTags)
+}
+
 function getTracks(crateId, sort, filter, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
         var rs = tx.executeSql("SELECT * FROM TRACKS WHERE CrateId = ? ORDER BY ?", [crateId, sort])
-        callback(rs.rows)
+        callback(decorateTracksWithTags(toArray(rs.rows)))
     })
 }
 
@@ -75,6 +104,29 @@ function getCategories(callback) {
     db.transaction(function(tx) {
         var rs = tx.executeSql("SELECT Name, CategoryId FROM CATEGORIES ORDER BY Name")
         callback(rs.rows)
+    })
+}
+
+function addTag(track, tag) {
+    var db = getDatabase();
+    db.transaction(function(tx) {
+        tx.executeSql("INSERT INTO TRACK_TAGS (TrackId, TagId) VALUES (?, ?)", [track.TrackId, tag.TagId])
+    })
+}
+
+function getTags(callback) {
+    var db = getDatabase();
+    db.transaction(function(tx) {
+        var rs = tx.executeSql("SELECT Name, TagId FROM TAGS ORDER BY Name")
+        callback(rs.rows)
+    })
+}
+
+function getNextTags(callback) {
+    var db = getDatabase();
+    db.transaction(function(tx) {
+        var rs = tx.executeSql("SELECT Name, TagId FROM TAGS WHERE TagId NOT IN (SELECT TagId from TRACK_TAGS WHERE TrackId = ?) ORDER BY Name LIMIT 4", [root.track.TrackId])
+        callback(toArray(rs.rows))
     })
 }
 
@@ -90,7 +142,7 @@ function getRatedTracksFor(categoryId, crateId, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
         var rs = tx.executeSql("SELECT TRACKS.*, RATINGS.*, TRACKS.TrackId AS TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE TRACKS.CrateId IS ? AND RATINGS.CrateId IS ? AND RATINGS.CategoryId IS ? AND RATINGS.MoreThanId IS NULL AND RATINGS.LessThanId IS NULL AND RATINGS.Rating IS NOT NULL ORDER BY Rating DESC", [crateId, crateId, categoryId])
-        callback(rs.rows)
+        callback(decorateTracksWithTags(toArray(rs.rows)))
     })
 }
 
@@ -98,7 +150,7 @@ function getUnratedTracksFor(categoryId, crateId, excludeTrackId, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
         var rs = tx.executeSql("SELECT TRACKS.* FROM TRACKS WHERE TRACKS.TrackId IS NOT ? AND TRACKS.CrateId IS ? AND TRACKS.TrackId NOT IN (SELECT TRACKS.TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ? AND RATINGS.CrateId IS ? AND RATINGS.Rating IS NOT NULL) ORDER BY TRACKS.Artist, TRACKS.Title", [excludeTrackId, crateId, categoryId, crateId])
-        callback(rs.rows)
+        callback(decorateTracksWithTags(toArray(rs.rows)))
     })
 }
 
@@ -127,6 +179,13 @@ function createCrate(name) {
     var db = getDatabase()
     db.transaction(function(tx) {
         tx.executeSql("INSERT INTO CRATES (Name) VALUES (?)", [name])
+    })
+}
+
+function createTag(name) {
+    var db = getDatabase()
+    db.transaction(function(tx) {
+        tx.executeSql("INSERT INTO TAGS (Name) VALUES (?)", [name])
     })
 }
 
@@ -252,7 +311,7 @@ function initiateCategoryRating(trackId, categoryId, crateId, callback) {
     getRatedTracksFor(categoryId, crateId, function(rated) {
         if (rated.length === 0) {
             getUnratedTracksFor(categoryId, crateId, trackId, function(unrated) {
-                var referenceTrack = unrated.item(Math.floor(unrated.length/2))
+                var referenceTrack = unrated[Math.floor(unrated.length/2)]
 
                 var db = getDatabase()
                 db.transaction(function(tx) {
@@ -283,6 +342,7 @@ function removeTrack(trackId, crateId) {
         var db = getDatabase()
         db.transaction(function(tx) {
             tx.executeSql("DELETE FROM RATINGS WHERE TrackId=? AND CrateId=?", [trackId, crateId])
+            tx.executeSql("DELETE FROM TRACK_TAGS WHERE TrackId=?", [trackId])
             tx.executeSql("DELETE FROM TRACKS WHERE TrackId=? AND CrateId=?", [trackId, crateId])
         })
     }

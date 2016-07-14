@@ -52,6 +52,7 @@ Item {
 
         TableViewColumn { role: "Artist"; title: "Artist" ; width: 100 }
         TableViewColumn { role: "Title"; title: "Title" ; width: 200 }
+        TableViewColumn { role: "Tags"; title: "Tags" ; width: 200 }
         TableViewColumn { role: "Filename"; title: "Filename" ; width: 200 }
 
         onDoubleClicked: root.doubleClicked(row)

@@ -7,6 +7,7 @@ MenuBar {
     signal clearDatabase
     signal addCategory
     signal addCrate
+    signal addTag
     signal importFiles
     signal importFolder
     signal importPlaylist
@@ -34,6 +35,11 @@ MenuBar {
             text: qsTr("Add category")
             onTriggered: root.addCategory()
         }
+        MenuItem {
+            text: qsTr("Add tag")
+            onTriggered: root.addTag()
+        }
+
         MenuItem {
             text: qsTr("Add crate")
             onTriggered: root.addCrate()

@@ -19,5 +19,7 @@
         <file>TabSelector.qml</file>
         <file>StatusNotification.qml</file>
         <file>Spinner.qml</file>
+        <file>NewTagDialog.qml</file>
+        <file>TagView.qml</file>
     </qresource>
 </RCC>

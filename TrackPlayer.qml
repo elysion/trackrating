@@ -10,8 +10,19 @@ import "database.js" as Database
 Item {
     id: root
 
-    property alias source: player.source
+    property variant track
+    property variant previousTrack: track
     property bool playing: player.playbackState === Audio.PlayingState
+
+    function getTag(index) {
+        return tags.model.length > index ? tags.model[index] : undefined
+    }
+
+    function updateTags() {
+        Database.getNextTags(function(nextTags) {
+            tags.model = nextTags
+        })
+    }
 
     function toggle() {
         if (root.playing)
@@ -19,8 +30,19 @@ Item {
         else player.play()
     }
 
-    function play(url) {
-        if (url) player.source = url
+    function play(track) {
+        // TODO: clone
+        root.track = {
+            TrackId: track.TrackId,
+            Location: track.Location,
+            Artist: track.Artist,
+            Title: track.Artist,
+            Tags: track.Tags,
+            Filename: track.Filename,
+            CrateId: track.CrateId
+        }
+        updateTags(track)
+        player.source = root.track.Location
         player.play()
     }
 
@@ -56,7 +78,7 @@ Item {
         id: bgWaveform
         
         opacity: root.playing ? 0.25 : 0.1
-        source: "image://waveform/"+player.source
+        source: "image://waveform/"+root.track.Location
         smooth: false
         
         anchors {
@@ -87,7 +109,7 @@ Item {
                 
                 width: bgWaveform.width
                 opacity: 1
-                source: "image://waveform/"+player.source
+                source: "image://waveform/"+root.track.Location
                 smooth: false
                 clip: true
             }
@@ -127,6 +149,18 @@ Item {
             }
         }
     }
+
+    TagView {
+        id: tags
+
+        anchors {
+            left: parent.left
+            right: cover.left
+            bottom: parent.bottom
+        }
+
+        height: 50
+    }
     
     Image {
         id: cover
@@ -140,7 +174,7 @@ Item {
             bottom: parent.bottom
         }
         
-        source: "image://cover/"+player.source
+        source: "image://cover/"+root.track.Location
         smooth: true
         
         Row {

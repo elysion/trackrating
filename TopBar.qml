@@ -13,10 +13,20 @@ RowLayout {
 
     property variant crate
     property variant category
+    property variant tag
     property bool rated
 
     signal noCategories
+    signal noTags
     signal exportAsPlaylist
+
+    function selectCategoryFilter() {
+        filterSelect.currentIndex = 0
+    }
+
+    function selectTagFilter() {
+        filterSelect.currentIndex = 1
+    }
 
     function selectRated(rated) {
         ratedCheckBox.currentIndex = rated ? 1 : 0
@@ -30,8 +40,13 @@ RowLayout {
         categorySelect.select(name)
     }
 
+    function selectTag(name) {
+        tagSelect.select(name)
+    }
+
     function refresh() {
         categorySelect.refresh()
+        tagSelect.refresh()
         selectRated(false)
         crateSelect.refresh()
         crateSelect.currentIndex = 0
@@ -95,12 +110,22 @@ RowLayout {
         }
         
         Text {
-            text: "Category:"
+            text: "Filter:"
             anchors.verticalCenter: parent.verticalCenter
+        }
+
+        ComboBox {
+            id: filterSelect
+            model: ["Category", "Tag"]
+
+            function value() {
+                return model.get(currentIndex)
+            }
         }
         
         ComboBox {
             id: categorySelect
+            visible: filterSelect.currentIndex === 0
             anchors.verticalCenter: parent.verticalCenter
 
             function select(name) {
@@ -145,6 +170,59 @@ RowLayout {
             
             onCurrentIndexChanged: {
                 root.category = model.get(currentIndex)
+            }
+        }
+
+        ComboBox {
+            id: tagSelect
+            visible: filterSelect.currentIndex === 1
+            anchors.verticalCenter: parent.verticalCenter
+
+            function select(name) {
+                for (var i = 0; i < model.count; ++i) {
+                    if (name === model.get(i).Name) {
+                        currentIndex = i
+                        break
+                    }
+                }
+            }
+
+            function refresh() {
+                var select = tagSelect
+                var currentItem = select.currentText
+                select.model.clear()
+                select.currentIndex = -1
+
+                Database.getTags(function(tags) {
+                    for (var i = 0; i < tags.length; ++i) {
+                        var item = tags[i]
+                        var id = item.TagId
+                        var name = item.Name
+                        select.model.append({
+                                modelData: name,
+                                text: name,
+                                Name: name,
+                                TagId: id
+                            })
+                    }
+
+                    if (tags.length === 0) {
+                        return root.noTags()
+                    }
+
+                    if (currentItem) {
+                        select(currentItem)
+                    } else {
+                        currentIndex = 0
+                    }
+                })
+            }
+
+            model: ListModel {}
+            width: 200
+
+            onCurrentIndexChanged: {
+                root.tag = model.get(currentIndex)
             }
         }
         
