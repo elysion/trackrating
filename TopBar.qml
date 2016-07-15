@@ -144,19 +144,22 @@ RowLayout {
                 
                 Database.getCategories(function(categories) {
                     for (var i = 0; i < categories.length; ++i) {
-                        var name = categories.item(i).Name
+                        var item = categories.item(i)
+                        var name = item.Name
+                        var id = item.CategoryId
+
                         categorySelect.model.append({
-                                modelData: categories.item(i).Name,
-                                text: categories.item(i).Name,
+                                modelData: name,
+                                text: name,
                                 Name: name,
-                                CategoryId: categories.item(i).CategoryId
+                                CategoryId: id
                             })
                     }
-                    
+
                     if (categories.length === 0) {
                         return root.noCategories()
                     }
-                    
+
                     if (currentItem) {
                         select(currentItem)
                     } else {
