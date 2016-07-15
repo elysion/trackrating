@@ -30,6 +30,10 @@ RowLayout {
         filterSelect.currentIndex = Filters.TAG_FILTER_INDEX
     }
 
+    function selectNoFilter() {
+        filterSelect.currentIndex = Filters.NO_FILTER_INDEX
+    }
+
     function selectRated(rated) {
         ratedCheckBox.currentIndex = rated ? 1 : 0
     }

@@ -175,7 +175,7 @@ function getUnratedTracksFor(categoryId, crateId, excludeTrackId, callback) {
     })
 }
 
-function getTracksFor(tagId, crateId, callback) {
+function getTaggedTracksFor(tagId, crateId, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
         var rs = tx.executeSql("SELECT TRACKS.*, TAGS.*, TRACKS.TrackId AS TrackId "
@@ -185,6 +185,17 @@ function getTracksFor(tagId, crateId, callback) {
                                    + "WHERE TRACKS.CrateId IS ? "
                                      + "AND TAGS.TagId IS ? "
                                    + "ORDER BY TRACKS.Artist, TRACKS.Title", [crateId, tagId])
+        callback(decorateTracksWithTags(toArray(rs.rows)))
+    })
+}
+
+function getAllTracksFor(crateId, callback) {
+    var db = getDatabase();
+    db.transaction(function(tx) {
+        var rs = tx.executeSql("SELECT TRACKS.*, TRACKS.TrackId AS TrackId "
+                                   + "FROM TRACKS "
+                                   + "WHERE TRACKS.CrateId IS ? "
+                                   + "ORDER BY TRACKS.Artist, TRACKS.Title", [crateId])
         callback(decorateTracksWithTags(toArray(rs.rows)))
     })
 }

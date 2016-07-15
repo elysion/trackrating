@@ -282,6 +282,7 @@ ApplicationWindow {
                     newCategoryDialog.open()
                 }
 
+                onFilterChanged: updateList()
                 onCategoryChanged: updateList()
                 onTagChanged: updateList()
                 onCrateChanged: updateList()
@@ -294,16 +295,20 @@ ApplicationWindow {
                     var tagId = filter === Filters.TAG_FILTER_INDEX ? tag.TagId : undefined
                     var categoryId = filter === Filters.CATEGORY_FILTER_INDEX ? category.CategoryId : undefined
 
-                    if (!tagId && !categoryId) return
-
-                    if (categoryId) {
-                        if (rated) {
-                            Database.getRatedTracksFor(categoryId, crate.CrateId, showTracks)
-                        } else {
-                            Database.getUnratedTracksFor(categoryId, crate.CrateId, null, showTracks)
-                        }
+                    if (filter === Filters.NO_FILTER_INDEX) {
+                        Database.getAllTracksFor(crate.CrateId, showTracks)
                     } else {
-                        Database.getTracksFor(tagId, crate.CrateId, showTracks)
+                        if (!tagId && !categoryId) return
+
+                        if (categoryId) {
+                            if (rated) {
+                                Database.getRatedTracksFor(categoryId, crate.CrateId, showTracks)
+                            } else {
+                                Database.getUnratedTracksFor(categoryId, crate.CrateId, null, showTracks)
+                            }
+                        } else {
+                            Database.getTaggedTracksFor(tagId, crate.CrateId, showTracks)
+                        }
                     }
 
                     function showTracks(tracks) {
