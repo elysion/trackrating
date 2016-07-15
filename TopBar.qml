@@ -16,6 +16,7 @@ RowLayout {
     property variant category
     property variant tag
     property bool rated
+    property alias filter: filterSelect.currentIndex
 
     signal noCategories
     signal noTags
@@ -239,6 +240,7 @@ RowLayout {
             id: ratedCheckBox
             anchors.verticalCenter: parent.verticalCenter
             
+            visible: root.filter === Filters.CATEGORY_FILTER_INDEX
             width: 200
             model: ["Unrated", "Rated"]
 
