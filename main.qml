@@ -135,9 +135,8 @@ ApplicationWindow {
         }
 
         onAddCrate: {
-            Database.getCrates(function(crates) {
-                newCrateDialog.open()
-            })
+            newCrateDialog.open()
+        }
 
         onAddTag: {
             newTagDialog.open()
