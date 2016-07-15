@@ -224,14 +224,6 @@ ApplicationWindow {
     ListModel {
         id: trackListModel
 
-        function refresh(sort, filter) {
-            // TODO: fetch rated / unrated & sort
-            var crate = sortBar.crate
-            Database.getTracks(crate.CrateId, sort || "Artist", filter || "", function(results) {
-                showTracksFromDbResults(results)
-            })
-        }
-
         function showTracksFromDbResults(results) {
             clear()
 
@@ -541,7 +533,7 @@ ApplicationWindow {
             if (tag) {
                 Database.addTag(player.track, tag)
                 player.updateTags()
-                trackListModel.refresh()
+                sortBar.updateList()
             }
         }
     }
