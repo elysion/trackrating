@@ -141,7 +141,17 @@ function getCrates(callback) {
 function getRatedTracksFor(categoryId, crateId, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT TRACKS.*, RATINGS.*, TRACKS.TrackId AS TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE TRACKS.CrateId IS ? AND RATINGS.CrateId IS ? AND RATINGS.CategoryId IS ? AND RATINGS.MoreThanId IS NULL AND RATINGS.LessThanId IS NULL AND RATINGS.Rating IS NOT NULL ORDER BY Rating DESC", [crateId, crateId, categoryId])
+        var rs = tx.executeSql("SELECT TRACKS.*, RATINGS.*, TRACKS.TrackId AS TrackId "
+                                   + "FROM TRACKS "
+                                     + "LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId "
+                                   + "WHERE TRACKS.CrateId IS ? "
+                                     + "AND RATINGS.CrateId IS ? "
+                                     + "AND RATINGS.CategoryId IS ? "
+                                     + "AND RATINGS.MoreThanId IS NULL "
+                                     + "AND RATINGS.LessThanId IS NULL "
+                                     + "AND RATINGS.Rating IS NOT NULL "
+                                   + "ORDER BY Rating DESC", [crateId, crateId, categoryId])
+
         callback(decorateTracksWithTags(toArray(rs.rows)))
     })
 }
@@ -149,7 +159,18 @@ function getRatedTracksFor(categoryId, crateId, callback) {
 function getUnratedTracksFor(categoryId, crateId, excludeTrackId, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT TRACKS.* FROM TRACKS WHERE TRACKS.TrackId IS NOT ? AND TRACKS.CrateId IS ? AND TRACKS.TrackId NOT IN (SELECT TRACKS.TrackId FROM TRACKS LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId WHERE RATINGS.CategoryId IS ? AND RATINGS.CrateId IS ? AND RATINGS.Rating IS NOT NULL) ORDER BY TRACKS.Artist, TRACKS.Title", [excludeTrackId, crateId, categoryId, crateId])
+        var rs = tx.executeSql("SELECT TRACKS.* "
+                               + "FROM TRACKS "
+                               + "WHERE TRACKS.TrackId IS NOT ? "
+                                 + "AND TRACKS.CrateId IS ? "
+                                 + "AND TRACKS.TrackId NOT IN "
+                                   + "(SELECT TRACKS.TrackId "
+                                     + "FROM TRACKS "
+                                     + "LEFT OUTER JOIN RATINGS ON RATINGS.TrackId = TRACKS.TrackId "
+                                     + "WHERE RATINGS.CategoryId IS ? "
+                                       + "AND RATINGS.CrateId IS ? "
+                                       + "AND RATINGS.Rating IS NOT NULL) "
+                               + "ORDER BY TRACKS.Artist, TRACKS.Title", [excludeTrackId, crateId, categoryId, crateId])
         callback(decorateTracksWithTags(toArray(rs.rows)))
     })
 }
