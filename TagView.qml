@@ -11,7 +11,6 @@ Item {
     id: root
 
     property variant model
-    property variant excluded: []
 
     Row {
         id: row
