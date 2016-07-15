@@ -119,6 +119,7 @@ RowLayout {
         ComboBox {
             id: filterSelect
             model: Filters.FILTER_NAMES
+            currentIndex: Filters.CATEGORY_FILTER_INDEX
 
             function value() {
                 return model.get(currentIndex)

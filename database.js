@@ -175,6 +175,20 @@ function getUnratedTracksFor(categoryId, crateId, excludeTrackId, callback) {
     })
 }
 
+function getTracksFor(tagId, crateId, callback) {
+    var db = getDatabase();
+    db.transaction(function(tx) {
+        var rs = tx.executeSql("SELECT TRACKS.*, TAGS.*, TRACKS.TrackId AS TrackId "
+                                   + "FROM TRACKS "
+                                     + "JOIN TRACK_TAGS ON TRACK_TAGS.TrackId = TRACKS.TrackId "
+                                     + "JOIN TAGS ON TAGS.TagId = TRACK_TAGS.TagId "
+                                   + "WHERE TRACKS.CrateId IS ? "
+                                     + "AND TAGS.TagId IS ? "
+                                   + "ORDER BY TRACKS.Artist, TRACKS.Title", [crateId, tagId])
+        callback(decorateTracksWithTags(toArray(rs.rows)))
+    })
+}
+
 function addTrack(artist, title, filename, location, crateId) {
     var db = getDatabase()
     db.transaction(function(tx) {

@@ -290,13 +290,20 @@ ApplicationWindow {
 
                 function updateList() {
                     if (crate === undefined) return
-                    if (filter === Filters.CATEGORY_FILTER_INDEX && category === undefined) return
-                    if (filter === Filters.TAG_FILTER_INDEX && tag === undefined) return
 
-                    if (rated) {
-                        Database.getRatedTracksFor(category.CategoryId, crate.CrateId, showTracks)
+                    var tagId = filter === Filters.TAG_FILTER_INDEX ? tag.TagId : undefined
+                    var categoryId = filter === Filters.CATEGORY_FILTER_INDEX ? category.CategoryId : undefined
+
+                    if (!tagId && !categoryId) return
+
+                    if (categoryId) {
+                        if (rated) {
+                            Database.getRatedTracksFor(categoryId, crate.CrateId, showTracks)
+                        } else {
+                            Database.getUnratedTracksFor(categoryId, crate.CrateId, null, showTracks)
+                        }
                     } else {
-                        Database.getUnratedTracksFor(category.CategoryId, crate.CrateId, null, showTracks)
+                        Database.getTracksFor(tagId, crate.CrateId, showTracks)
                     }
 
                     function showTracks(tracks) {
