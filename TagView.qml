@@ -38,7 +38,7 @@ Item {
         TagRectangle {
             key: "r"
             tag: "More tags..."
-            visible: root.model.length === row.keys.length
+            visible: root.model !== undefined && root.model.length === row.keys.length
         }
     }
 }
