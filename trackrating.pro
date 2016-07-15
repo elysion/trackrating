@@ -37,9 +37,9 @@ HEADERS += \
     file-dialog/filesavedialog.h \
     fileio.h
 
-unix: LIBS += -L/usr/local/Cellar/taglib/1.11/lib/ -ltag -L/usr/local/Cellar/mpg123/1.23.4/lib/ -lmpg123
+unix: LIBS += -L/usr/local/Cellar/taglib/1.11/lib/ -ltag -L/usr/local/Cellar/mpg123/1.23.6/lib/ -lmpg123
 
 INCLUDEPATH += /usr/local/Cellar/taglib/1.11/include/
-INCLUDEPATH += /usr/local/Cellar/mpg123/1.23.4/include/
+INCLUDEPATH += /usr/local/Cellar/mpg123/1.23.6/include/
 
 DISTFILES +=
