@@ -9,6 +9,7 @@ import Qt.labs.settings 1.0
 import "database.js" as Database
 import trackrating 1.0
 import FileDialog 1.0
+import "filters.js" as Filters
 
 ApplicationWindow {
     id: root
@@ -289,7 +290,8 @@ ApplicationWindow {
 
                 function updateList() {
                     if (crate === undefined) return
-                    if (category === undefined) return
+                    if (filter === Filters.CATEGORY_FILTER_INDEX && category === undefined) return
+                    if (filter === Filters.TAG_FILTER_INDEX && tag === undefined) return
 
                     if (rated) {
                         Database.getRatedTracksFor(category.CategoryId, crate.CrateId, showTracks)

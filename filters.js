@@ -1,0 +1,3 @@
+var FILTER_NAMES = ["Category", "Tag"]
+var CATEGORY_FILTER_INDEX = 0
+var TAG_FILTER_INDEX = 1

@@ -7,6 +7,7 @@ import QtMultimedia 5.0
 import QtGraphicalEffects 1.0
 import Qt.labs.settings 1.0
 import "database.js" as Database
+import "filters.js" as Filters
 
 RowLayout {
     id: root
@@ -21,11 +22,11 @@ RowLayout {
     signal exportAsPlaylist
 
     function selectCategoryFilter() {
-        filterSelect.currentIndex = 0
+        filterSelect.currentIndex = Filters.CATEGORY_FILTER_INDEX
     }
 
     function selectTagFilter() {
-        filterSelect.currentIndex = 1
+        filterSelect.currentIndex = Filters.TAG_FILTER_INDEX
     }
 
     function selectRated(rated) {
@@ -116,7 +117,7 @@ RowLayout {
 
         ComboBox {
             id: filterSelect
-            model: ["Category", "Tag"]
+            model: Filters.FILTER_NAMES
 
             function value() {
                 return model.get(currentIndex)
@@ -125,7 +126,7 @@ RowLayout {
         
         ComboBox {
             id: categorySelect
-            visible: filterSelect.currentIndex === 0
+            visible: filterSelect.currentIndex === Filters.CATEGORY_FILTER_INDEX
             anchors.verticalCenter: parent.verticalCenter
 
             function select(name) {
@@ -178,7 +179,7 @@ RowLayout {
 
         ComboBox {
             id: tagSelect
-            visible: filterSelect.currentIndex === 1
+            visible: filterSelect.currentIndex === Filters.TAG_FILTER_INDEX
             anchors.verticalCenter: parent.verticalCenter
 
             function select(name) {

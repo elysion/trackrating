@@ -22,5 +22,6 @@
         <file>NewTagDialog.qml</file>
         <file>TagView.qml</file>
         <file>TagRectangle.qml</file>
+        <file>filters.js</file>
     </qresource>
 </RCC>
