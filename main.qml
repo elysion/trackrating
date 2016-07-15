@@ -282,6 +282,7 @@ ApplicationWindow {
                 }
 
                 onCategoryChanged: updateList()
+                onTagChanged: updateList()
                 onCrateChanged: updateList()
                 onRatedChanged: updateList()
                 onExportAsPlaylist: exportAction.trigger()
