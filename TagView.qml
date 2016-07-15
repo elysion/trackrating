@@ -16,6 +16,8 @@ Item {
     Row {
         id: row
 
+        property variant keys: ["1", "2", "3", "4", "q", "w", "e"]
+
         anchors {
             horizontalCenter: parent.horizontalCenter
             bottom: parent.bottom
@@ -27,21 +29,16 @@ Item {
         Repeater {
             model: root.model
 
-            delegate: Rectangle {
-                opacity: 0.5
-                radius: 4
-                width: childrenRect.width + 10
-                height: childrenRect.height + 10
-
-                Text {
-                    text: (index+1) + ": " + modelData.Name
-                    anchors {
-                        left: parent.left
-                        top: parent.top
-                        margins: 5
-                    }
-                }
+            delegate: TagRectangle {
+                key: row.keys[index]
+                tag: modelData.Name
             }
+        }
+
+        TagRectangle {
+            key: "r"
+            tag: "More tags..."
+            visible: root.model.length === row.keys.length
         }
     }
 }

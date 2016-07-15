@@ -21,5 +21,6 @@
         <file>Spinner.qml</file>
         <file>NewTagDialog.qml</file>
         <file>TagView.qml</file>
+        <file>TagRectangle.qml</file>
     </qresource>
 </RCC>
