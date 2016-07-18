@@ -16,10 +16,10 @@
 
 int main(int argc, char *argv[])
 {
+    QApplication::setOrganizationName("elysion");
+    QApplication::setOrganizationDomain("github.com/elysion");
+    QApplication::setApplicationName("Track Rating");
     QApplication app(argc, argv);
-    app.setOrganizationName("elysion");
-    app.setOrganizationDomain("github.com/elysion");
-    app.setApplicationName("Track Rating");
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(QLatin1String("waveform"), new WaveformImageProvider);
