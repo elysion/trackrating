@@ -252,29 +252,14 @@ ApplicationWindow {
 
         Keys.onSpacePressed: player.toggle()
 
-        Keys.onDigit1Pressed: {
-            player.addTag(0)
-        }
-
-        Keys.onDigit2Pressed: {
-            player.addTag(1)
-        }
-
-        Keys.onDigit3Pressed: {
-            player.addTag(2)
-        }
-
-        Keys.onDigit4Pressed: {
-            player.addTag(3)
         }
 
         Keys.onPressed: {
-            if (event.key === Qt.Key_Q) {
-                player.addTag(4)
-            } else if (event.key === Qt.Key_W) {
-                player.addTag(5)
-            } else if (event.key === Qt.Key_E) {
-                player.addTag(6)
+            var keys = [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4,
+                        Qt.Key_Q, Qt.Key_W, Qt.Key_E]
+            var index = keys.indexOf(event.key)
+            if (index !== -1) {
+                player.addTag(index)
             } else if (event.key === Qt.Key_R) {
                 player.updateTags()
             }
