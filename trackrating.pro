@@ -2,7 +2,7 @@ TEMPLATE = app
 
 QT += qml quick widgets sql multimedia svg
 
-# For file-dialog
+# For file-dialog which is needed in order to set the filename for the export playlist dialog
 QT += core-private
 QT += gui-private
 QT += widgets
