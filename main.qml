@@ -244,14 +244,17 @@ ApplicationWindow {
 
         Keys.onLeftPressed: {
             player.seekBackward()
+            event.accepted = true
         }
 
         Keys.onRightPressed: {
             player.seekForward()
+            event.accepted = true
         }
 
-        Keys.onSpacePressed: player.toggle()
-
+        Keys.onSpacePressed: {
+            player.toggle()
+            event.accepted = true
         }
 
         Keys.onPressed: {
@@ -260,8 +263,10 @@ ApplicationWindow {
             var index = keys.indexOf(event.key)
             if (index !== -1) {
                 player.addTag(index)
+                event.accepted = true
             } else if (event.key === Qt.Key_R) {
                 player.updateTags()
+                event.accepted = true
             }
         }
 
@@ -459,6 +464,7 @@ ApplicationWindow {
                     })
 
                     sortBar.updateList()
+                    event.accepted = true
                 }
             }
 
@@ -492,15 +498,18 @@ ApplicationWindow {
 
                 Keys.onUpPressed: {
                     rateTrack(unrated, true, rated)
+                    event.accepted = true
                 }
 
                 Keys.onDownPressed: {
                     rateTrack(unrated, false, rated)
+                    event.accepted = true
                 }
 
                 Keys.onTabPressed: {
                     var unratedPlaying = player.track.Location === unrated.Location
                     player.play(unratedPlaying ? rated : unrated)
+                    event.accepted = true
                 }
             }
 
