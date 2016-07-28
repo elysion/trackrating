@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
     QApplication::setOrganizationDomain("github.com/elysion");
     QApplication::setApplicationName("Track Rating");
     QApplication app(argc, argv);
+    app.setFont(QFont("Helvetica Neue"));
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(QLatin1String("waveform"), new WaveformImageProvider);
