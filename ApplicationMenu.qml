@@ -27,27 +27,33 @@ MenuBar {
             text: qsTr("Import &playlist")
             onTriggered: root.importPlaylist()
         }
+        MenuSeparator { }
         MenuItem {
             text: qsTr("Clear database")
             onTriggered: root.clearDatabase()
         }
+        MenuSeparator { }
         MenuItem {
-            text: qsTr("Add category")
+            text: qsTr("E&xit")
+            onTriggered: root.exit()
+        }
+    }
+
+    Menu {
+        title: qsTr("&Add")
+
+        MenuItem {
+            text: qsTr("Category")
             onTriggered: root.addCategory()
         }
         MenuItem {
-            text: qsTr("Add tag")
+            text: qsTr("Tag")
             onTriggered: root.addTag()
         }
 
         MenuItem {
-            text: qsTr("Add crate")
+            text: qsTr("Crate")
             onTriggered: root.addCrate()
-        }
-
-        MenuItem {
-            text: qsTr("E&xit")
-            onTriggered: root.exit()
         }
     }
 }
