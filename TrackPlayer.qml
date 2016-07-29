@@ -13,6 +13,10 @@ Item {
     property variant track
     property variant previousTrack: track
     property bool playing: player.playbackState === Audio.PlayingState
+    property alias position: player.position
+    property alias muted: player.muted
+
+    signal playbackStarted
 
     function getTag(index) {
         return tags.model.length > index ? tags.model[index] : undefined
@@ -71,6 +75,12 @@ Item {
 
         onPositionChanged: {
             slider.setPosition(position)
+        }
+
+        onPlaybackStateChanged: {
+            if (playbackState === Audio.PlayingState) {
+                root.playbackStarted()
+            }
         }
     }
 

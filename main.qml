@@ -476,6 +476,39 @@ ApplicationWindow {
                 focus: visible
                 currentTrackLocation: player.track.Location
                 playing: player.playing
+                property int playbackStartPosition: 0
+                property int unratedPosition: playbackStartPosition
+                property int ratedPosition: playbackStartPosition
+
+                onRatedChanged: ratedPosition = playbackStartPosition
+                onUnratedChanged: unratedPosition = playbackStartPosition
+
+                function startDelayedPlaybackPositionRestore() {
+                    positionRestoreTimer.restart()
+                }
+
+                function restorePlaybackPosition() {
+                    var unratedPlaying = isUnratedPlaying()
+
+                    if (unratedPlaying) {
+                        player.seek(unratedPosition)
+                    }
+                    else if (!unratedPlaying) {
+                        player.seek(ratedPosition)
+                    }
+                }
+
+                Timer {
+                    id: positionRestoreTimer
+
+                    repeat: false
+                    interval: 200
+                    running: false
+
+                    onTriggered: {
+                        rateTab.restorePlaybackPosition()
+                    }
+                }
 
                 onAllTracksRated: {
                     sortBar.updateList()
@@ -507,9 +540,18 @@ ApplicationWindow {
                 }
 
                 Keys.onTabPressed: {
-                    var unratedPlaying = player.track.Location === unrated.Location
+                    var unratedPlaying = isUnratedPlaying()
+
+                    if (unratedPlaying) unratedPosition = player.position
+                    else ratedPosition = player.position
+
                     player.play(unratedPlaying ? rated : unrated)
+
                     event.accepted = true
+                }
+
+                function isUnratedPlaying() {
+                    return unrated && player.track.Location === unrated.Location
                 }
             }
 
@@ -541,6 +583,10 @@ ApplicationWindow {
                     player.updateTags()
                     sortBar.updateList()
                 }
+            }
+
+            onPlaybackStarted: {
+                rateTab.startDelayedPlaybackPositionRestore()
             }
         }
 
