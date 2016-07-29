@@ -258,13 +258,13 @@ ApplicationWindow {
         }
 
         Keys.onPressed: {
-            var keys = [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4,
-                        Qt.Key_Q, Qt.Key_W, Qt.Key_E]
+            var keys = [Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5,
+                        Qt.Key_6, Qt.Key_7, Qt.Key_8, Qt.Key_9]
             var index = keys.indexOf(event.key)
             if (index !== -1) {
                 player.addTag(index)
                 event.accepted = true
-            } else if (event.key === Qt.Key_R) {
+            } else if (event.key === Qt.Key_0) {
                 player.updateTags()
                 event.accepted = true
             }

@@ -125,7 +125,7 @@ function getTags(callback) {
 function getNextTags(callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT Name, TagId FROM TAGS WHERE TagId NOT IN (SELECT TagId from TRACK_TAGS WHERE TrackId = ?) ORDER BY Name LIMIT 7", [root.track.TrackId])
+        var rs = tx.executeSql("SELECT Name, TagId FROM TAGS WHERE TagId NOT IN (SELECT TagId from TRACK_TAGS WHERE TrackId = ?) ORDER BY Name LIMIT 9", [root.track.TrackId])
         callback(toArray(rs.rows))
     })
 }

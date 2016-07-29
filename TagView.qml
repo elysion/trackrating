@@ -15,7 +15,7 @@ Item {
     Row {
         id: row
 
-        property variant keys: ["1", "2", "3", "4", "q", "w", "e"]
+        property variant keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
         anchors {
             horizontalCenter: parent.horizontalCenter
@@ -35,7 +35,7 @@ Item {
         }
 
         TagRectangle {
-            key: "r"
+            key: "0"
             tag: "More tags..."
             visible: root.model !== undefined && root.model.length === row.keys.length
         }
