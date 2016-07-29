@@ -47,11 +47,11 @@ Item {
     }
 
     function seekForward() {
-        seek(40000)
+        seek(20000)
     }
 
     function seekBackward() {
-        seek(-40000)
+        seek(-20000)
     }
 
     function seek(deltaMs) {
