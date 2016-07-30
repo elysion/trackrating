@@ -476,7 +476,7 @@ ApplicationWindow {
                 focus: visible
                 currentTrackLocation: player.track.Location
                 playing: player.playing
-                property int playbackStartPosition: 0
+                property int playbackStartPosition: 100000
                 property int unratedPosition: playbackStartPosition
                 property int ratedPosition: playbackStartPosition
 
