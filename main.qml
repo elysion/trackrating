@@ -265,7 +265,7 @@ ApplicationWindow {
                 player.addTag(index)
                 event.accepted = true
             } else if (event.key === Qt.Key_0) {
-                player.updateTags()
+                player.moreTags()
                 event.accepted = true
             }
         }

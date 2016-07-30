@@ -18,6 +18,10 @@ Item {
 
     signal playbackStarted
 
+    function moreTags() {
+        tags.moreTags()
+    }
+
     function getTag(index) {
         return tags.model.length > index ? tags.model[index] : undefined
     }

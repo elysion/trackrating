@@ -12,6 +12,23 @@ Item {
 
     property variant model
     property variant track
+    property int offset: 0
+    property bool moreTagsAvailable: false
+
+    onTrackChanged: root.offset = 0
+
+    function moreTags() {
+        Database.getTags(function (tags) {
+            if (offset + root.model.length >= tags.length - 1) {
+                offset = 0
+            } else {
+                offset += root.model.length
+            }
+            console.log('offset', offset)
+
+            update()
+        })
+    }
 
     function update() {
         Database.getTags(function (tags) {
@@ -49,7 +66,7 @@ Item {
         TagRectangle {
             key: "0"
             tag: "More tags..."
-            visible: root.model !== undefined && root.model.length === row.keys.length
+            visible: !!root.track && root.moreTagsAvailable
         }
     }
 }
