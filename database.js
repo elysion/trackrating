@@ -122,11 +122,27 @@ function getTags(callback) {
     })
 }
 
+function getTagsForTrack(track, callback) {
+    var db = getDatabase();
+    db.transaction(function(tx) {
+        var rs = tx.executeSql("SELECT Name, TagId FROM TRACK_TAGS NATURAL JOIN TAGS NATURAL JOIN (SELECT COUNT(TagId) as Count, TagId FROM TRACK_TAGS GROUP BY TagId) AS Counts WHERE TrackId = ? ORDER BY Counts.Count DESC, Name", [track.TrackId])
+        callback(toArray(rs.rows))
+    })
+}
+
 function getNextTags(callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
         var rs = tx.executeSql("SELECT Name, TagId FROM TAGS WHERE TagId NOT IN (SELECT TagId from TRACK_TAGS WHERE TrackId = ?) ORDER BY Name LIMIT 9", [root.track.TrackId])
         callback(toArray(rs.rows))
+    })
+}
+
+function removeTagFromTrack(track, tag, callback) {
+    var db = getDatabase()
+    db.transaction(function (tx) {
+        tx.executeSql("DELETE FROM TRACK_TAGS WHERE TrackId = ? AND TagId = ?", [track.TrackId, tag.TagId])
+        callback()
     })
 }
 

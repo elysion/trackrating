@@ -23,9 +23,8 @@ Item {
     }
 
     function updateTags() {
-        Database.getNextTags(function(nextTags) {
-            tags.model = nextTags
-        })
+        tags.update()
+        trackTagsView.update()
     }
 
     function toggle() {
@@ -45,7 +44,7 @@ Item {
             Filename: track.Filename,
             CrateId: track.CrateId
         }
-        updateTags(track)
+        updateTags()
         player.source = root.track.Location
         player.play()
     }
@@ -160,8 +159,24 @@ Item {
         }
     }
 
-    TagView {
+    TrackTagsView {
+        id: trackTagsView
+
+        track: root.track
+
+        anchors {
+            left: parent.left
+            right: cover.left
+            top: parent.top
+        }
+
+        onTagRemoved: root.updateTags()
+    }
+
+    AddTagsView {
         id: tags
+
+        track: root.track
 
         anchors {
             left: parent.left

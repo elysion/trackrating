@@ -11,6 +11,18 @@ Item {
     id: root
 
     property variant model
+    property variant track
+
+    function update() {
+        Database.getTags(function (tags) {
+            Database.getTagsForTrack(track, function (tagsForTrack) {
+                Database.getNextTags(track, offset, function(nextTags) {
+                    root.model = nextTags
+                })
+                root.moreTagsAvailable = tags.length > root.model.length + tagsForTrack.length
+            })
+        })
+    }
 
     Row {
         id: row

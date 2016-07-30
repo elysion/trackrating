@@ -20,8 +20,9 @@
         <file>StatusNotification.qml</file>
         <file>Spinner.qml</file>
         <file>NewTagDialog.qml</file>
-        <file>TagView.qml</file>
+        <file>AddTagsView.qml</file>
         <file>TagRectangle.qml</file>
         <file>filters.js</file>
+        <file>TrackTagsView.qml</file>
     </qresource>
 </RCC>
