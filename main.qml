@@ -345,7 +345,14 @@ ApplicationWindow {
                             }
                         }
 
+                        function addIndexToTracks(tracks) {
+                            tracks.map(function (track, index) {
+                                track['Index'] = index + 1
+                            })
+                        }
+
                         function showTracks(tracks) {
+                            addIndexToTracks(tracks)
                             trackListModel.showTracksFromDbResults(tracks)
                         }
                     }

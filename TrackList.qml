@@ -50,6 +50,7 @@ Item {
 
         selectionMode: SelectionMode.ExtendedSelection
 
+        TableViewColumn { role: "Index"; title: "#" ; width: 40 }
         TableViewColumn { role: "Artist"; title: "Artist" ; width: 100 }
         TableViewColumn { role: "Title"; title: "Title" ; width: 200 }
         TableViewColumn { role: "Tags"; title: "Tags" ; width: 200 }
