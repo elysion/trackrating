@@ -40,7 +40,7 @@ Item {
 
         spacing: 5
 
-        Text {
+        SharpText {
             text: "Current tags:"
             color: "white"
             height: 24

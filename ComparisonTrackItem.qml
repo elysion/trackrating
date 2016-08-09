@@ -47,7 +47,7 @@ Item {
                 opacity: 0.7
             }
 
-            Text {
+            SharpText {
                 id: trackInfo
                 property variant info: trackInfoProvider.getTrackInfo(modelData.Location)
 

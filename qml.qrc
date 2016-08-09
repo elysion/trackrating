@@ -24,5 +24,9 @@
         <file>TagRectangle.qml</file>
         <file>filters.js</file>
         <file>TrackTagsView.qml</file>
+        <file>TopBarComboBox.qml</file>
+        <file>TopBarRadioButton.qml</file>
+        <file>Theme.js</file>
+        <file>SharpText.qml</file>
     </qresource>
 </RCC>

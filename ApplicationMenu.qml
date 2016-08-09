@@ -11,6 +11,7 @@ MenuBar {
     signal importFiles
     signal importFolder
     signal importPlaylist
+    signal exportPlaylist
     signal exit
 
     Menu {
@@ -29,13 +30,13 @@ MenuBar {
         }
         MenuSeparator { }
         MenuItem {
-            text: qsTr("Clear database")
-            onTriggered: root.clearDatabase()
+            text: qsTr("&Export playlist")
+            onTriggered: root.exportPlaylist()
         }
         MenuSeparator { }
         MenuItem {
-            text: qsTr("E&xit")
-            onTriggered: root.exit()
+            text: qsTr("Clear database")
+            onTriggered: root.clearDatabase()
         }
     }
 

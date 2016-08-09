@@ -63,7 +63,7 @@ ApplicationWindow {
     function exportPlaylist(file) {
         var tracks = []
         for (var i = 0; i < trackListModel.count; ++i) {
-            tracks.push(trackListModel.get(i).Location)
+            tracks.push(trackListModel.get(i).Location.replace(/^(file:\/{2})/,""))
         }
 
         var playlist = tracks.join("\n")
@@ -142,6 +142,8 @@ ApplicationWindow {
         onAddTag: {
             newTagDialog.open()
         }
+
+        onExportPlaylist: exportAction.trigger()
 
         onExit: Qt.quit()
     }
@@ -267,14 +269,90 @@ ApplicationWindow {
             } else if (event.key === Qt.Key_0) {
                 player.moreTags()
                 event.accepted = true
+            } else if (event.key === Qt.Key_Plus) {
+                newTagDialog.open()
+                // TODO: add tag to track
+                event.accepted = true
             }
+        }
+
+
+        TopBar {
+            id: sortBar
+
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+            }
+
+            onNoCategories: {
+                newCategoryDialog.firstCategory = true
+                newCategoryDialog.open()
+            }
+
+            onFilterChanged: updateList()
+            onCategoryChanged: updateList()
+            onTagChanged: updateList()
+            onCrateChanged: updateList()
+            onRatedChanged: updateList()
+
+            function updateList() {
+                if (crate === undefined) return
+
+                var tagId = filter === Filters.TAG_FILTER_INDEX ? tag.TagId : undefined
+                var categoryId = filter === Filters.CATEGORY_FILTER_INDEX ? category.CategoryId : undefined
+
+                if (filter === Filters.NO_FILTER_INDEX) {
+                    Database.getAllTracksFor(crate.CrateId, showTracks)
+                } else {
+                    if (!tagId && !categoryId) return
+
+                    if (categoryId) {
+                        if (rated) {
+                            Database.getRatedTracksFor(categoryId, crate.CrateId, showTracks)
+                        } else {
+                            Database.getUnratedTracksFor(categoryId, crate.CrateId, null, showTracks)
+                        }
+                    } else {
+                        Database.getTaggedTracksFor(tagId, crate.CrateId, showTracks)
+                    }
+                }
+
+                function addIndexToTracks(tracks) {
+                    tracks.map(function (track, index) {
+                        track['Index'] = index + 1
+                    })
+                }
+
+                function showTracks(tracks) {
+                    addIndexToTracks(tracks)
+                    trackListModel.showTracksFromDbResults(tracks)
+                }
+            }
+        }
+
+        TabSelector {
+            id: tabSelector
+
+            anchors {
+                top: sortBar.bottom
+                bottomMargin: 10
+                left: parent.left
+                right: parent.right
+            }
+
+            activeTab: tabs.activeTab
+            onTabSelected: tabs.activeTab = tab
+
+            height: 40
         }
 
         Item {
             id: tabs
 
             anchors {
-                top: parent.top
+                top: tabSelector.bottom
                 left: parent.left
                 right: parent.right
                 bottom: player.top
@@ -293,186 +371,143 @@ ApplicationWindow {
                 text: "&Export"
                 shortcut: "Ctrl+E"
                 onTriggered: {
-                    exportPlaylistDialog.filename = [
-                                sortBar.crate.Name,
-                                sortBar.category.Name,
-                                (sortBar.rated ? "Rated" : "Unrated")
-                            ].join("_") + ".m3u"
+                    var isCategorySelected = sortBar.filter == Filters.CATEGORY_FILTER_INDEX
+
+                    var filenameParts
+
+                    switch (sortBar.filter) {
+                        case Filters.CATEGORY_FILTER_INDEX:
+                            filenameParts = [sortBar.category.Name,
+                                (sortBar.rated ? "Rated" : "Unrated")]
+                            break
+                        case Filters.TAG_FILTER_INDEX:
+                            filenameParts = [sortBar.tag.Name]
+                        break
+                        default:
+                            filenameParts = ["All"]
+                        break
+                    }
+
+                    exportPlaylistDialog.filename = [sortBar.crate.Name, filenameParts.join("_")].join("_") + ".m3u"
 
                     exportPlaylistDialog.open()
                 }
             }
 
-            Item {
+            TrackList {
+                id: trackList
                 anchors.fill: parent
+
                 visible: tabs.activeTab === 0
                 focus: visible
 
-                TopBar {
-                    id: sortBar
+                showIndex: sortBar.rated
 
-                    onNoCategories: {
-                        newCategoryDialog.firstCategory = true
-                        newCategoryDialog.open()
-                    }
+                model: trackListModel
 
-                    onFilterChanged: updateList()
-                    onCategoryChanged: updateList()
-                    onTagChanged: updateList()
-                    onCrateChanged: updateList()
-                    onRatedChanged: updateList()
-                    onExportAsPlaylist: exportAction.trigger()
-
-                    function updateList() {
-                        if (crate === undefined) return
-
-                        var tagId = filter === Filters.TAG_FILTER_INDEX ? tag.TagId : undefined
-                        var categoryId = filter === Filters.CATEGORY_FILTER_INDEX ? category.CategoryId : undefined
-
-                        if (filter === Filters.NO_FILTER_INDEX) {
-                            Database.getAllTracksFor(crate.CrateId, showTracks)
-                        } else {
-                            if (!tagId && !categoryId) return
-
-                            if (categoryId) {
-                                if (rated) {
-                                    Database.getRatedTracksFor(categoryId, crate.CrateId, showTracks)
-                                } else {
-                                    Database.getUnratedTracksFor(categoryId, crate.CrateId, null, showTracks)
-                                }
-                            } else {
-                                Database.getTaggedTracksFor(tagId, crate.CrateId, showTracks)
-                            }
-                        }
-
-                        function addIndexToTracks(tracks) {
-                            tracks.map(function (track, index) {
-                                track['Index'] = index + 1
-                            })
-                        }
-
-                        function showTracks(tracks) {
-                            addIndexToTracks(tracks)
-                            trackListModel.showTracksFromDbResults(tracks)
-                        }
-                    }
-                }
-
-                TrackList {
-                    id: trackList
-                    anchors {
-                        top: sortBar.bottom
-                        bottom: parent.bottom
-                        left: parent.left
-                        right: parent.right
-                    }
-
-                    model: trackListModel
-
-                    Component.onCompleted: {
-                        sortBar.refresh()
-                        sortBar.updateList()
-                        importOverlay.refresh()
-                    }
-
-                    onDoubleClicked: {
-                        player.play(model.get(row))
-                    }
-
-                    onReturnClicked: {
-                        var tracks = trackList.getSelectedTracks()
-                        player.play(tracks[0])
-                    }
-
-                    function startRatingCurrentlySelectedTrack() {
-                        var tracks = trackList.getSelectedTracks()
-                        var track = tracks[0]
-                        player.play(track)
-                        rateTab.startComparison(track, sortBar.category, sortBar.crate)
-                        tabs.activeTab = 1
-                    }
-
-                    Action {
-                        id: rateAction
-                        text: "&Rate"
-                        shortcut: "Ctrl+R"
-                        onTriggered: trackList.startRatingCurrentlySelectedTrack()
-                    }
-
-                    MouseArea {
-                        id: contextMenuTrigger
-
-                        anchors.fill: parent
-                        acceptedButtons: Qt.RightButton
-
-                        property variant selectedTrackProxy
-
-                        onPressed: {
-                            selectedTrackProxy = trackList.itemAt(mouse.x, mouse.y)
-                            trackList.selectRowAt(mouse.x, mouse.y)
-                            contextMenu.popup()
-                        }
-                    }
-
-                    Menu {
-                        id: contextMenu
-
-                        MenuItem {
-                            text: "Rate"
-
-                            onTriggered: {
-                                var track = contextMenuTrigger.selectedTrackProxy
-                                player.play(track)
-                                rateTab.startComparison(track, sortBar.category, sortBar.crate)
-                                tabs.activeTab = 1
-                            }
-                        }
-
-                        MenuItem {
-                            text: "Play"
-                            shortcut: "Enter"
-
-                            onTriggered: {
-                                player.play(contextMenuTrigger.selectedTrackProxy)
-                            }
-                        }
-
-                        MenuItem {
-                            text: "Remove"
-
-                            onTriggered: {
-                                Database.removeTrack(contextMenuTrigger.selectedTrackProxy.TrackId,
-                                                     contextMenuTrigger.selectedTrackProxy.CrateId)
-                                sortBar.updateList()
-                            }
-                        }
-                    }
-
-                    ImportOverlay {
-                        id: importOverlay
-
-                        onImportFolder: importFolderDialog.open()
-                        onImportFiles: importFilesDialog.open()
-
-                        function refresh() {
-                            Database.getTrackCount(function(trackCount) {
-                                importOverlay.visible = trackCount === 0
-                            })
-                        }
-                    }
-                }
-
-                Keys.onDeletePressed: {
-                    var tracks = trackList.getSelectedTracks()
-                    var crate = sortBar.crate
-
-                    tracks.forEach(function(track) {
-                        Database.removeTrack(track.TrackId, crate.CrateId)
-                    })
-
+                Component.onCompleted: {
+                    sortBar.refresh()
                     sortBar.updateList()
-                    event.accepted = true
+                    importOverlay.refresh()
                 }
+
+                onDoubleClicked: {
+                    player.play(model.get(row))
+                }
+
+                onReturnClicked: {
+                    var tracks = trackList.getSelectedTracks()
+                    player.play(tracks[0])
+                }
+
+                function startRatingCurrentlySelectedTrack() {
+                    var tracks = trackList.getSelectedTracks()
+                    var track = tracks[0]
+                    player.play(track)
+                    rateTab.startComparison(track, sortBar.category, sortBar.crate)
+                    tabs.activeTab = 1
+                }
+
+                Action {
+                    id: rateAction
+                    text: "&Rate"
+                    shortcut: "Ctrl+R"
+                    onTriggered: trackList.startRatingCurrentlySelectedTrack()
+                }
+
+                MouseArea {
+                    id: contextMenuTrigger
+
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+
+                    property variant selectedTrackProxy
+
+                    onPressed: {
+                        selectedTrackProxy = trackList.itemAt(mouse.x, mouse.y)
+                        trackList.selectRowAt(mouse.x, mouse.y)
+                        contextMenu.popup()
+                    }
+                }
+
+                Menu {
+                    id: contextMenu
+
+                    MenuItem {
+                        text: "Rate"
+
+                        onTriggered: {
+                            var track = contextMenuTrigger.selectedTrackProxy
+                            player.play(track)
+                            rateTab.startComparison(track, sortBar.category, sortBar.crate)
+                            tabs.activeTab = 1
+                        }
+                    }
+
+                    MenuItem {
+                        text: "Play"
+                        shortcut: "Enter"
+
+                        onTriggered: {
+                            player.play(contextMenuTrigger.selectedTrackProxy)
+                        }
+                    }
+
+                    MenuItem {
+                        text: "Remove"
+
+                        onTriggered: {
+                            Database.removeTrack(contextMenuTrigger.selectedTrackProxy.TrackId,
+                                                 contextMenuTrigger.selectedTrackProxy.CrateId)
+                            sortBar.updateList()
+                        }
+                    }
+                }
+
+                ImportOverlay {
+                    id: importOverlay
+
+                    onImportFolder: importFolderDialog.open()
+                    onImportFiles: importFilesDialog.open()
+
+                    function refresh() {
+                        Database.getTrackCount(function(trackCount) {
+                            importOverlay.visible = trackCount === 0
+                        })
+                    }
+                }
+            }
+
+            Keys.onDeletePressed: {
+                var tracks = trackList.getSelectedTracks()
+                var crate = sortBar.crate
+
+                tracks.forEach(function(track) {
+                    Database.removeTrack(track.TrackId, crate.CrateId)
+                })
+
+                sortBar.updateList()
+                event.accepted = true
             }
 
             ComparisonView {
@@ -560,13 +595,6 @@ ApplicationWindow {
                 function isUnratedPlaying() {
                     return unrated && player.track.Location === unrated.Location
                 }
-            }
-
-            TabSelector {
-                id: tabSelector
-
-                activeTab: tabs.activeTab
-                onTabSelected: tabs.activeTab = tab
             }
         }
 

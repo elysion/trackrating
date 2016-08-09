@@ -110,7 +110,7 @@ Item {
         })
     }
     
-    Text {
+    SharpText {
         id: header
 
         anchors {

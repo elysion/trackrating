@@ -47,7 +47,7 @@ Item {
 
         spacing: 10
 
-        Text {
+        SharpText {
             id: notificationText
 
             anchors {
@@ -63,7 +63,7 @@ Item {
             wrapMode: Text.Wrap
         }
 
-        Text {
+        SharpText {
             id: statusText
 
             anchors {

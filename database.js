@@ -125,7 +125,7 @@ function getTags(callback) {
 function getTagsForTrack(track, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT Name, TagId FROM TRACK_TAGS NATURAL JOIN TAGS NATURAL JOIN (SELECT COUNT(TagId) as Count, TagId FROM TRACK_TAGS GROUP BY TagId) AS Counts WHERE TrackId = ? ORDER BY Counts.Count DESC, Name", [track.TrackId])
+        var rs = tx.executeSql("SELECT Name, TagId FROM TRACK_TAGS NATURAL JOIN TAGS NATURAL LEFT JOIN (SELECT COUNT(TagId) as Count, TagId FROM TRACK_TAGS GROUP BY TagId) AS Counts WHERE TrackId = ? ORDER BY Counts.Count DESC, Name", [track.TrackId])
         callback(toArray(rs.rows))
     })
 }
@@ -133,7 +133,7 @@ function getTagsForTrack(track, callback) {
 function getNextTags(track, offset, callback) {
     var db = getDatabase();
     db.transaction(function(tx) {
-        var rs = tx.executeSql("SELECT Name, TagId FROM TAGS NATURAL JOIN (SELECT COUNT(TagId) as Count, TagId FROM TRACK_TAGS GROUP BY TagId) as Counts WHERE TagId NOT IN (SELECT TagId from TRACK_TAGS WHERE TrackId = ?) ORDER BY Counts.Count DESC, Name LIMIT 9 OFFSET ?", [track.TrackId, offset || 0])
+        var rs = tx.executeSql("SELECT Name, TagId FROM TAGS NATURAL LEFT JOIN (SELECT COUNT(TagId) as Count, TagId FROM TRACK_TAGS GROUP BY TagId) as Counts WHERE TagId NOT IN (SELECT TagId from TRACK_TAGS WHERE TrackId = ?) ORDER BY Counts.Count DESC, Name LIMIT 9 OFFSET ?", [track.TrackId, offset || 0])
         callback(toArray(rs.rows))
     })
 }

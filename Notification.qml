@@ -43,7 +43,7 @@ Item {
         visible: true
     }
     
-    Text {
+    SharpText {
         id: notificationText
         
         anchors {

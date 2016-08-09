@@ -35,7 +35,7 @@ Item {
             centerIn: rectangle
         }
 
-        Text {
+        SharpText {
             id: text
             text: (root.key ? root.key + ": " : '') + root.tag
         }
@@ -57,7 +57,7 @@ Item {
                 opacity: 0.5
             }
 
-            Text {
+            SharpText {
                 text: 'x'
                 color: "white"
                 opacity: mouseArea.containsMouse ? 1 : 0.5

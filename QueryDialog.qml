@@ -19,7 +19,7 @@ Dialog {
 
         spacing: 10
 
-        Text {
+        SharpText {
             id: infoText
             visible: root.infoText != ""
 
@@ -39,7 +39,7 @@ Dialog {
                 right: parent.right
             }
 
-            Text {
+            SharpText {
                 id: label
             }
 

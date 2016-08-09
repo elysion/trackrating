@@ -11,7 +11,7 @@ Item {
     width: childrenRect.width
     height: childrenRect.height
 
-    Text {
+    SharpText {
         id: text
         color: "#cccccc"
         font.bold: true

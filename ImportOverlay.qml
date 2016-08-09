@@ -33,7 +33,7 @@ Item {
         height: childrenRect.height
         spacing: 10
         
-        Text {
+        SharpText {
             anchors.horizontalCenter: parent.horizontalCenter
             color: "white"
             text: "Crate empty."
@@ -48,7 +48,7 @@ Item {
                 onClicked: root.importFolder()
             }
             
-            Text {
+            SharpText {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Or"
                 color: "white"

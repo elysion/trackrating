@@ -8,5 +8,19 @@
         <file>equal.png</file>
         <file>spinner.png</file>
         <file>pause.png</file>
+        <file>chevron_down.png</file>
+        <file>crate.png</file>
+        <file>crate2.png</file>
+        <file>filter.png</file>
+        <file>filter2.png</file>
+        <file>crate3.png</file>
+        <file>crate.svg</file>
+        <file>filter.svg</file>
+        <file>filter_16x16_black.png</file>
+        <file>filter_16x16_white.png</file>
+        <file>crate_16x16_black.png</file>
+        <file>crate_16x16_white.png</file>
+        <file>tag_16x16_black.png</file>
+        <file>tag_16x16_white.png</file>
     </qresource>
 </RCC>

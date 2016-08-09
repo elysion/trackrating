@@ -24,7 +24,6 @@ Item {
             } else {
                 offset += root.model.length
             }
-            console.log('offset', offset)
 
             update()
         })
@@ -66,6 +65,12 @@ Item {
         TagRectangle {
             key: "0"
             tag: "More tags..."
+            visible: !!root.track && root.moreTagsAvailable
+        }
+
+        TagRectangle {
+            key: "+"
+            tag: "Create and add new tag"
             visible: !!root.track && root.moreTagsAvailable
         }
     }
