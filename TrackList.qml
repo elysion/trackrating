@@ -80,6 +80,10 @@ Item {
                          !styleData.alternate ? alternateBackgroundColor : backgroundColor
             }
 
+            frame: Rectangle {
+                border.width: 0
+            }
+
             headerDelegate: Rectangle {
                     height: 30
 

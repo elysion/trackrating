@@ -25,9 +25,9 @@ Item {
     property variant rated
     property bool playing
 
-    property variant category
-    property variant crate
-    property string currentTrackLocation
+    property variant category: ({})
+    property variant crate: ({})
+    property string currentTrackLocation: ""
 
     function contains(object, value) {
         for (var key in object) {

@@ -28,5 +28,8 @@
         <file>TopBarRadioButton.qml</file>
         <file>Theme.js</file>
         <file>SharpText.qml</file>
+        <file>OptionsRow.qml</file>
+        <file>FiltersColumn.qml</file>
+        <file>FilterList.qml</file>
     </qresource>
 </RCC>

@@ -35,7 +35,7 @@ ApplicationWindow {
 
         onResultReady: {
             Database.addTrack(trackInfo.artist, trackInfo.title, trackInfo.filename, trackInfo.url, crateId)
-            sortBar.updateList()
+            tabSelector.updateList()
             processed++
             statusNotification.update('Processing: ' + (processed + 1) + '/' + total)
 
@@ -51,7 +51,7 @@ ApplicationWindow {
 
         statusNotification.show('Importing tracks')
 
-        threadedTrackInfoProvider.crateId = sortBar.crate.CrateId
+        threadedTrackInfoProvider.crateId = tabSelector.crate.CrateId
         threadedTrackInfoProvider.getTrackInfo(toArray(urls))
     }
 
@@ -111,7 +111,7 @@ ApplicationWindow {
     menuBar: ApplicationMenu {
         onClearDatabase: {
             Database.clearDatabase()
-            sortBar.refresh()
+            tabSelector.refresh()
             trackListModel.refresh()
             importOverlay.refresh()
         }
@@ -154,8 +154,8 @@ ApplicationWindow {
         onAccepted: {
             firstCategory = false
             Database.createCategory(queryResult)
-            sortBar.refresh()
-            sortBar.selectCategory(queryResult)
+            tabSelector.refresh()
+            tabSelector.selectCategory(queryResult)
             queryResult = ""
         }
     }
@@ -165,9 +165,9 @@ ApplicationWindow {
 
         onAccepted: {
             Database.createCrate(queryResult)
-            sortBar.refresh()
-            sortBar.selectCrateFilter()
-            sortBar.selectCrate(queryResult)
+            tabSelector.refresh()
+            tabSelector.selectCrateFilter()
+            tabSelector.selectCrate(queryResult)
             queryResult = ""
             trackListModel.refresh()
         }
@@ -178,9 +178,9 @@ ApplicationWindow {
 
         onAccepted: {
             Database.createTag(queryResult)
-            sortBar.refresh()
-            sortBar.selectTagFilter()
-            sortBar.selectTag(queryResult)
+            tabSelector.refresh()
+            tabSelector.selectTagFilter()
+            tabSelector.selectTag(queryResult)
             queryResult = ""
             trackListModel.refresh()
         }
@@ -277,14 +277,59 @@ ApplicationWindow {
         }
 
 
-        TopBar {
-            id: sortBar
+        TrackPlayer {
+            id: player
+
+            focus: true
 
             anchors {
                 top: parent.top
                 left: parent.left
                 right: parent.right
             }
+
+            height: 200
+
+            function addTag(index) {
+                var tag = player.getTag(index)
+                if (tag) {
+                    Database.addTag(player.track, tag)
+                    player.updateTags()
+                    tabSelector.updateList()
+                }
+            }
+
+            onPlaybackStarted: {
+                rateTab.startDelayedPlaybackPositionRestore()
+            }
+        }
+
+//        TopBar {
+//            visible: false
+//            id: tabSelector
+
+//            anchors {
+//                top: player.bottom
+//                left: parent.left
+//                right: parent.right
+//            }
+
+//        }
+
+        TabSelector {
+            id: tabSelector
+
+            anchors {
+                top: player.bottom
+                bottomMargin: 10
+                left: parent.left
+                right: parent.right
+            }
+
+            activeTab: tabs.activeTab
+            onTabSelected: tabs.activeTab = tab
+
+            height: 40
 
             onNoCategories: {
                 newCategoryDialog.firstCategory = true
@@ -332,22 +377,6 @@ ApplicationWindow {
             }
         }
 
-        TabSelector {
-            id: tabSelector
-
-            anchors {
-                top: sortBar.bottom
-                bottomMargin: 10
-                left: parent.left
-                right: parent.right
-            }
-
-            activeTab: tabs.activeTab
-            onTabSelected: tabs.activeTab = tab
-
-            height: 40
-        }
-
         Item {
             id: tabs
 
@@ -355,14 +384,14 @@ ApplicationWindow {
                 top: tabSelector.bottom
                 left: parent.left
                 right: parent.right
-                bottom: player.top
+                bottom: parent.bottom
             }
 
             property int activeTab: 0
 
             onActiveTabChanged: {
                 if (activeTab === 0) {
-                    sortBar.updateList()
+                    tabSelector.updateList()
                 }
             }
 
@@ -371,143 +400,164 @@ ApplicationWindow {
                 text: "&Export"
                 shortcut: "Ctrl+E"
                 onTriggered: {
-                    var isCategorySelected = sortBar.filter == Filters.CATEGORY_FILTER_INDEX
+                    var isCategorySelected = tabSelector.filter == Filters.CATEGORY_FILTER_INDEX
 
                     var filenameParts
 
-                    switch (sortBar.filter) {
+                    switch (tabSelector.filter) {
                         case Filters.CATEGORY_FILTER_INDEX:
-                            filenameParts = [sortBar.category.Name,
-                                (sortBar.rated ? "Rated" : "Unrated")]
+                            filenameParts = [tabSelector.category.Name,
+                                (tabSelector.rated ? "Rated" : "Unrated")]
                             break
                         case Filters.TAG_FILTER_INDEX:
-                            filenameParts = [sortBar.tag.Name]
+                            filenameParts = [tabSelector.tag.Name]
                         break
                         default:
                             filenameParts = ["All"]
                         break
                     }
 
-                    exportPlaylistDialog.filename = [sortBar.crate.Name, filenameParts.join("_")].join("_") + ".m3u"
+                    exportPlaylistDialog.filename = [tabSelector.crate.Name, filenameParts.join("_")].join("_") + ".m3u"
 
                     exportPlaylistDialog.open()
                 }
             }
 
-            TrackList {
-                id: trackList
+            Item {
+                id: listTab
+
                 anchors.fill: parent
 
                 visible: tabs.activeTab === 0
-                focus: visible
 
-                showIndex: sortBar.rated
+                FiltersColumn {
+                    id: filtersColumn
 
-                model: trackListModel
-
-                Component.onCompleted: {
-                    sortBar.refresh()
-                    sortBar.updateList()
-                    importOverlay.refresh()
-                }
-
-                onDoubleClicked: {
-                    player.play(model.get(row))
-                }
-
-                onReturnClicked: {
-                    var tracks = trackList.getSelectedTracks()
-                    player.play(tracks[0])
-                }
-
-                function startRatingCurrentlySelectedTrack() {
-                    var tracks = trackList.getSelectedTracks()
-                    var track = tracks[0]
-                    player.play(track)
-                    rateTab.startComparison(track, sortBar.category, sortBar.crate)
-                    tabs.activeTab = 1
-                }
-
-                Action {
-                    id: rateAction
-                    text: "&Rate"
-                    shortcut: "Ctrl+R"
-                    onTriggered: trackList.startRatingCurrentlySelectedTrack()
-                }
-
-                MouseArea {
-                    id: contextMenuTrigger
-
-                    anchors.fill: parent
-                    acceptedButtons: Qt.RightButton
-
-                    property variant selectedTrackProxy
-
-                    onPressed: {
-                        selectedTrackProxy = trackList.itemAt(mouse.x, mouse.y)
-                        trackList.selectRowAt(mouse.x, mouse.y)
-                        contextMenu.popup()
+                    onCategoryChanged: {
+                        tabSelector.showRatedUnratedSelect = category !== undefined
                     }
                 }
 
-                Menu {
-                    id: contextMenu
+                TrackList {
+                    id: trackList
 
-                    MenuItem {
-                        text: "Rate"
-
-                        onTriggered: {
-                            var track = contextMenuTrigger.selectedTrackProxy
-                            player.play(track)
-                            rateTab.startComparison(track, sortBar.category, sortBar.crate)
-                            tabs.activeTab = 1
-                        }
+                    anchors {
+                        left: filtersColumn.right
+                        right: parent.right
+                        top: parent.top
+                        bottom: parent.bottom
                     }
 
-                    MenuItem {
-                        text: "Play"
-                        shortcut: "Enter"
+                    focus: visible
 
-                        onTriggered: {
-                            player.play(contextMenuTrigger.selectedTrackProxy)
-                        }
+                    showIndex: tabSelector.rated
+
+                    model: trackListModel
+
+                    Component.onCompleted: {
+                        tabSelector.refresh()
+                        tabSelector.updateList()
+                        importOverlay.refresh()
                     }
 
-                    MenuItem {
-                        text: "Remove"
-
-                        onTriggered: {
-                            Database.removeTrack(contextMenuTrigger.selectedTrackProxy.TrackId,
-                                                 contextMenuTrigger.selectedTrackProxy.CrateId)
-                            sortBar.updateList()
-                        }
+                    onDoubleClicked: {
+                        player.play(model.get(row))
                     }
-                }
 
-                ImportOverlay {
-                    id: importOverlay
+                    onReturnClicked: {
+                        var tracks = trackList.getSelectedTracks()
+                        player.play(tracks[0])
+                    }
 
-                    onImportFolder: importFolderDialog.open()
-                    onImportFiles: importFilesDialog.open()
+                    Keys.onDeletePressed: {
+                        var tracks = trackList.getSelectedTracks()
+                        var crate = tabSelector.crate
 
-                    function refresh() {
-                        Database.getTrackCount(function(trackCount) {
-                            importOverlay.visible = trackCount === 0
+                        tracks.forEach(function(track) {
+                            Database.removeTrack(track.TrackId, crate.CrateId)
                         })
+
+                        tabSelector.updateList()
+                        event.accepted = true
+                    }
+
+                    function startRatingCurrentlySelectedTrack() {
+                        var tracks = trackList.getSelectedTracks()
+                        var track = tracks[0]
+                        player.play(track)
+                        rateTab.startComparison(track, tabSelector.category, tabSelector.crate)
+                        tabs.activeTab = 1
+                    }
+
+                    Action {
+                        id: rateAction
+                        text: "&Rate"
+                        shortcut: "Ctrl+R"
+                        onTriggered: trackList.startRatingCurrentlySelectedTrack()
+                    }
+
+                    MouseArea {
+                        id: contextMenuTrigger
+
+                        anchors.fill: parent
+                        acceptedButtons: Qt.RightButton
+
+                        property variant selectedTrackProxy
+
+                        onPressed: {
+                            selectedTrackProxy = trackList.itemAt(mouse.x, mouse.y)
+                            trackList.selectRowAt(mouse.x, mouse.y)
+                            contextMenu.popup()
+                        }
+                    }
+
+                    Menu {
+                        id: contextMenu
+
+                        MenuItem {
+                            text: "Rate"
+
+                            onTriggered: {
+                                var track = contextMenuTrigger.selectedTrackProxy
+                                player.play(track)
+                                rateTab.startComparison(track, tabSelector.category, tabSelector.crate)
+                                tabs.activeTab = 1
+                            }
+                        }
+
+                        MenuItem {
+                            text: "Play"
+                            shortcut: "Enter"
+
+                            onTriggered: {
+                                player.play(contextMenuTrigger.selectedTrackProxy)
+                            }
+                        }
+
+                        MenuItem {
+                            text: "Remove"
+
+                            onTriggered: {
+                                Database.removeTrack(contextMenuTrigger.selectedTrackProxy.TrackId,
+                                                     contextMenuTrigger.selectedTrackProxy.CrateId)
+                                tabSelector.updateList()
+                            }
+                        }
+                    }
+
+                    ImportOverlay {
+                        id: importOverlay
+
+                        onImportFolder: importFolderDialog.open()
+                        onImportFiles: importFilesDialog.open()
+
+                        function refresh() {
+                            Database.getTrackCount(function(trackCount) {
+                                importOverlay.visible = trackCount === 0
+                            })
+                        }
                     }
                 }
-            }
-
-            Keys.onDeletePressed: {
-                var tracks = trackList.getSelectedTracks()
-                var crate = sortBar.crate
-
-                tracks.forEach(function(track) {
-                    Database.removeTrack(track.TrackId, crate.CrateId)
-                })
-
-                sortBar.updateList()
-                event.accepted = true
             }
 
             ComparisonView {
@@ -553,8 +603,8 @@ ApplicationWindow {
                 }
 
                 onAllTracksRated: {
-                    sortBar.updateList()
-                    sortBar.selectRated(true)
+                    tabSelector.updateList()
+                    tabSelector.selectRated(true)
                     tabs.activeTab = 0
                 }
 
@@ -595,33 +645,6 @@ ApplicationWindow {
                 function isUnratedPlaying() {
                     return unrated && player.track.Location === unrated.Location
                 }
-            }
-        }
-
-        TrackPlayer {
-            id: player
-
-            focus: true
-
-            anchors {
-                bottom: parent.bottom
-                left: parent.left
-                right: parent.right
-            }
-
-            height: 200
-
-            function addTag(index) {
-                var tag = player.getTag(index)
-                if (tag) {
-                    Database.addTag(player.track, tag)
-                    player.updateTags()
-                    sortBar.updateList()
-                }
-            }
-
-            onPlaybackStarted: {
-                rateTab.startDelayedPlaybackPositionRestore()
             }
         }
 

@@ -10,7 +10,7 @@ import "database.js" as Database
 Item {
     id: root
 
-    property variant track
+    property variant track: ({})
     property variant previousTrack: track
     property bool playing: player.playbackState === Audio.PlayingState
     property alias position: player.position
@@ -87,6 +87,55 @@ Item {
         }
     }
 
+
+    Image {
+        id: cover
+
+        width: height
+
+        anchors {
+            left: parent.left
+            top: parent.top
+            bottom: parent.bottom
+        }
+
+        source: "image://cover/"+root.track.Location
+        smooth: true
+
+        Row {
+            id: buttons
+
+            anchors {
+                horizontalCenter: parent.horizontalCenter
+                bottom: parent.bottom
+                bottomMargin: 10
+            }
+
+            spacing: 10
+
+            PlayerButton {
+                width: 30
+                height: width
+                onClicked: player.seek(0)
+                source: "qrc:/images/rwd.png"
+                smooth: true
+            }
+            PlayerButton {
+                width: 30
+                height: width
+                onClicked: root.toggle()
+                source: root.playing ? "qrc:/images/pause.png" : "qrc:/images/play.png"
+                smooth: true
+            }
+            PlayerButton {
+                width: 30
+                height: width
+                source: "qrc:/images/fwd.png"
+                smooth: true
+            }
+        }
+    }
+
     Image {
         id: bgWaveform
         
@@ -95,8 +144,8 @@ Item {
         smooth: false
         
         anchors {
-            left: parent.left
-            right: cover.left
+            right: parent.right
+            left: cover.right
             top: parent.top
             bottom: parent.bottom
         }
@@ -169,8 +218,8 @@ Item {
         track: root.track
 
         anchors {
-            left: parent.left
-            right: cover.left
+            right: parent.right
+            left: cover.right
             top: parent.top
         }
 
@@ -183,60 +232,11 @@ Item {
         track: root.track
 
         anchors {
-            left: parent.left
-            right: cover.left
+            right: parent.right
+            left: cover.right
             bottom: parent.bottom
         }
 
         height: 50
-    }
-    
-    Image {
-        id: cover
-        
-        height: parent.height
-        width: height
-        
-        anchors {
-            right: parent.right
-            top: parent.top
-            bottom: parent.bottom
-        }
-        
-        source: "image://cover/"+root.track.Location
-        smooth: true
-        
-        Row {
-            id: buttons
-
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                bottom: parent.bottom
-                bottomMargin: 10
-            }
-            
-            spacing: 10
-            
-            PlayerButton {
-                width: 30
-                height: width
-                onClicked: player.seek(0)
-                source: "qrc:/images/rwd.png"
-                smooth: true
-            }
-            PlayerButton {
-                width: 30
-                height: width
-                onClicked: root.toggle()
-                source: root.playing ? "qrc:/images/pause.png" : "qrc:/images/play.png"
-                smooth: true
-            }
-            PlayerButton {
-                width: 30
-                height: width
-                source: "qrc:/images/fwd.png"
-                smooth: true
-            }
-        }
     }
 }
