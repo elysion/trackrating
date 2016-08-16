@@ -328,6 +328,7 @@ ApplicationWindow {
 
             activeTab: tabs.activeTab
             onTabSelected: tabs.activeTab = tab
+            showRatedUnratedSelect: false
 
             height: 40
 
@@ -336,33 +337,13 @@ ApplicationWindow {
                 newCategoryDialog.open()
             }
 
-            onFilterChanged: updateList()
-            onCategoryChanged: updateList()
-            onTagChanged: updateList()
             onCrateChanged: updateList()
-            onRatedChanged: updateList()
 
             function updateList() {
                 if (crate === undefined) return
 
-                var tagId = filter === Filters.TAG_FILTER_INDEX ? tag.TagId : undefined
-                var categoryId = filter === Filters.CATEGORY_FILTER_INDEX ? category.CategoryId : undefined
-
-                if (filter === Filters.NO_FILTER_INDEX) {
-                    Database.getAllTracksFor(crate.CrateId, showTracks)
-                } else {
-                    if (!tagId && !categoryId) return
-
-                    if (categoryId) {
-                        if (rated) {
-                            Database.getRatedTracksFor(categoryId, crate.CrateId, showTracks)
-                        } else {
-                            Database.getUnratedTracksFor(categoryId, crate.CrateId, null, showTracks)
-                        }
-                    } else {
-                        Database.getTaggedTracksFor(tagId, crate.CrateId, showTracks)
-                    }
-                }
+                var crateId = crate && crate.CrateId
+                Database.getAllTracksFor(crateId, showTracks)
 
                 function addIndexToTracks(tracks) {
                     tracks.map(function (track, index) {
@@ -400,6 +381,7 @@ ApplicationWindow {
                 text: "&Export"
                 shortcut: "Ctrl+E"
                 onTriggered: {
+                    // TODO: use filtersColumn
                     var isCategorySelected = tabSelector.filter == Filters.CATEGORY_FILTER_INDEX
 
                     var filenameParts
@@ -434,7 +416,49 @@ ApplicationWindow {
                     id: filtersColumn
 
                     onCategoryChanged: {
-                        tabSelector.showRatedUnratedSelect = category !== undefined
+                        tabSelector.showRatedUnratedSelect = !!category
+
+                        if (!category) return
+                        updateList()
+                    }
+
+                    onTagChanged: {
+                        tabSelector.showRatedUnratedSelect = !!category
+
+                        if (!tag) return
+                        updateList()
+                    }
+
+                    function updateList() {
+                        var crateId = tabSelector.crate.CrateId
+                        var tagId = tag && tag.TagId
+                        var categoryId = category && category.CategoryId
+                        var rated = tabSelector.rated
+
+                        if (!tagId && !categoryId) {
+                            Database.getAllTracksFor(crateId, showTracks)
+                        }
+
+                        if (categoryId) {
+                            if (rated) {
+                                Database.getRatedTracksFor(categoryId, crateId, showTracks)
+                            } else {
+                                Database.getUnratedTracksFor(categoryId, crateId, null, showTracks)
+                            }
+                        } else if (tagId) {
+                            Database.getTaggedTracksFor(tagId, crateId, showTracks)
+                        }
+
+                        function addIndexToTracks(tracks) {
+                            tracks.map(function (track, index) {
+                                track['Index'] = index + 1
+                            })
+                        }
+
+                        function showTracks(tracks) {
+                            addIndexToTracks(tracks)
+                            trackListModel.showTracksFromDbResults(tracks)
+                        }
                     }
                 }
 

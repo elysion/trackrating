@@ -16,8 +16,8 @@ Rectangle {
     
     Component.onCompleted: refresh()
 
-    property variant tag: ({})
-    property variant category: ({})
+    property variant tag
+    property variant category
 
     function refresh() {
         var list = tagsList
@@ -76,7 +76,29 @@ Rectangle {
     
     color: "#f6f6f6"
     width: 200
-    
+
+    FilterListItem {
+        id: allTracks
+
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+        }
+        text: "All tracks"
+
+        selected: !root.category && !root.tag
+
+        MouseArea {
+            anchors.fill: parent
+
+            onClicked: {
+                tagsList.currentIndex = -1
+                categoriesList.currentIndex = -1
+            }
+        }
+    }
+
     FilterList {
         id: categoriesList
 
@@ -85,8 +107,7 @@ Rectangle {
         anchors {
             left: parent.left
             right: parent.right
-            top: parent.top
-            bottom: parent.verticalCenter
+            top: allTracks.bottom
         }
 
         onCurrentIndexChanged: {
@@ -96,6 +117,49 @@ Rectangle {
 
             root.category = model.get(currentIndex)
         }
+
+
+        function select(name) {
+            for (var i = 0; i < model.count; ++i) {
+                if (name === model.get(i).Name) {
+                    currentIndex = i
+                    break
+                }
+            }
+        }
+
+        function refresh() {
+            var currentItem = categorySelect.currentText
+            categorySelect.model.clear()
+            categorySelect.currentIndex = -1
+
+            Database.getCategories(function(categories) {
+                for (var i = 0; i < categories.length; ++i) {
+                    var item = categories.item(i)
+                    var name = item.Name
+                    var id = item.CategoryId
+
+                    categorySelect.model.append({
+                                                    modelData: name,
+                                                    text: name,
+                                                    Name: name,
+                                                    CategoryId: id
+                                                })
+                }
+
+                if (categories.length === 0) {
+                    return root.noCategories()
+                }
+
+                if (currentItem) {
+                    select(currentItem)
+                } else {
+                    currentIndex = 0
+                }
+            })
+        }
+
+        model: ListModel {}
     }
     
     FilterList {
@@ -106,8 +170,47 @@ Rectangle {
         anchors {
             left: parent.left
             right: parent.right
-            top: parent.verticalCenter
-            bottom: parent.bottom
+            top: categoriesList.bottom
+        }
+
+        function select(name) {
+            for (var i = 0; i < model.count; ++i) {
+                if (name === model.get(i).Name) {
+                    currentIndex = i
+                    break
+                }
+            }
+        }
+
+        function refresh() {
+            var select = tagSelect
+            var currentItem = select.currentText
+            select.model.clear()
+            select.currentIndex = -1
+
+            Database.getTags(function(tags) {
+                for (var i = 0; i < tags.length; ++i) {
+                    var item = tags[i]
+                    var id = item.TagId
+                    var name = item.Name
+                    select.model.append({
+                                            modelData: name,
+                                            text: name,
+                                            Name: name,
+                                            TagId: id
+                                        })
+                }
+
+                if (tags.length === 0) {
+                    return root.noTags()
+                }
+
+                if (currentItem) {
+                    select(currentItem)
+                } else {
+                    currentIndex = 0
+                }
+            })
         }
 
         onCurrentIndexChanged: {
@@ -117,5 +220,7 @@ Rectangle {
 
             root.tag = model.get(currentIndex)
         }
+
+        model: ListModel {}
     }
 }

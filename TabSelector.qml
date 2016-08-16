@@ -18,10 +18,8 @@ Rectangle {
 
     property variant crate: ({})
     property variant category: ({})
-    property variant tag: ({})
     property bool rated: true
     property alias showRatedUnratedSelect: ratedUnratedSelect.visible
-    property alias filter: filterSelect.currentIndex
 
     signal noCategories
     signal noTags
@@ -56,263 +54,181 @@ Rectangle {
     }
 
     function refresh() {
-        categorySelect.refresh()
-        tagSelect.refresh()
         selectRated(false)
         crateSelect.refresh()
         crateSelect.currentIndex = 0
     }
 
-    Row {
-        spacing: 10
+    RowLayout {
+        id: rows
         anchors {
-            fill: parent
             margins: 10
-        }
-
-        RowLayout {
-            anchors {
-                margins: 10
-                verticalCenter: parent.verticalCenter
-            }
-
-            Row {
-                spacing: 10
-
-                TopBarComboBox {
-                    id: crateSelect
-
-                    iconSource: "qrc:/images/crate_16x16_white.png"
-
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    function select(crate) {
-                        for (var i = 0; i < model.count; ++i) {
-                            if (model.get(i).Name === crate) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-                    }
-
-                    function refresh() {
-                        var currentItem = currentText
-                        model.clear()
-                        currentIndex = -1
-
-                        Database.getCrates(function(crates) {
-                            for (var i = 0; i < crates.length; ++i) {
-                                var name = crates.item(i).Name
-                                crateSelect.model.append({text: crates.item(i).Name, Name: name, CrateId: crates.item(i).CrateId})
-                            }
-
-                            if (currentItem) {
-                                select(currentItem)
-                            } else {
-                                currentIndex = 0
-                            }
-                        })
-                    }
-
-                    model: ListModel {}
-                    width: 160
-
-                    onCurrentIndexChanged: root.crate = model.get(currentIndex)
-                }
-
-                TopBarComboBox {
-                    id: filterSelect
-                    model: Filters.FILTER_NAMES
-                    currentIndex: Filters.CATEGORY_FILTER_INDEX
-                    iconSource: "qrc:/images/filter_16x16_white.png"
-
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 180
-                    visible: false
-
-                    function value() {
-                        return model.get(currentIndex)
-                    }
-                }
-
-                TopBarComboBox {
-                    id: categorySelect
-
-//                    visible: filterSelect.currentIndex === Filters.CATEGORY_FILTER_INDEX
-                    visible: false
-                    anchors.verticalCenter: parent.verticalCenter
-                    iconSource: "qrc:/images/tag_16x16_white.png"
-
-                    function select(name) {
-                        for (var i = 0; i < model.count; ++i) {
-                            if (name === model.get(i).Name) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-                    }
-
-                    function refresh() {
-                        var currentItem = categorySelect.currentText
-                        categorySelect.model.clear()
-                        categorySelect.currentIndex = -1
-
-                        Database.getCategories(function(categories) {
-                            for (var i = 0; i < categories.length; ++i) {
-                                var item = categories.item(i)
-                                var name = item.Name
-                                var id = item.CategoryId
-
-                                categorySelect.model.append({
-                                                                modelData: name,
-                                                                text: name,
-                                                                Name: name,
-                                                                CategoryId: id
-                                                            })
-                            }
-
-                            if (categories.length === 0) {
-                                return root.noCategories()
-                            }
-
-                            if (currentItem) {
-                                select(currentItem)
-                            } else {
-                                currentIndex = 0
-                            }
-                        })
-                    }
-
-                    model: ListModel {}
-                    width: 160
-
-                    onCurrentIndexChanged: {
-                        root.category = model.get(currentIndex)
-                    }
-                }
-
-                TopBarComboBox {
-                    id: tagSelect
-//                    visible: filterSelect.currentIndex === Filters.TAG_FILTER_INDEX
-                    visible: false
-                    anchors.verticalCenter: parent.verticalCenter
-                    iconSource: "qrc:/images/tag_16x16_white.png"
-
-                    function select(name) {
-                        for (var i = 0; i < model.count; ++i) {
-                            if (name === model.get(i).Name) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-                    }
-
-                    function refresh() {
-                        var select = tagSelect
-                        var currentItem = select.currentText
-                        select.model.clear()
-                        select.currentIndex = -1
-
-                        Database.getTags(function(tags) {
-                            for (var i = 0; i < tags.length; ++i) {
-                                var item = tags[i]
-                                var id = item.TagId
-                                var name = item.Name
-                                select.model.append({
-                                                        modelData: name,
-                                                        text: name,
-                                                        Name: name,
-                                                        TagId: id
-                                                    })
-                            }
-
-                            if (tags.length === 0) {
-                                return root.noTags()
-                            }
-
-                            if (currentItem) {
-                                select(currentItem)
-                            } else {
-                                currentIndex = 0
-                            }
-                        })
-                    }
-
-                    model: ListModel {}
-                    width: 160
-
-                    onCurrentIndexChanged: {
-                        root.tag = model.get(currentIndex)
-                    }
-                }
-
-                ExclusiveGroup {
-                    id: checkedInputGroup
-                }
-
-                Row {
-                    id: ratedUnratedSelect
-                    visible: root.activeTab === 0
-
-                    spacing: 1
-                    TopBarRadioButton {
-                        id: ratedRadio
-
-                        text: "Rated"
-                        checked: true
-                        visible: root.filter === Filters.CATEGORY_FILTER_INDEX
-                        anchors.verticalCenter: parent.verticalCenter
-                        exclusiveGroup: checkedInputGroup
-                        onCheckedChanged: if (checked) root.rated = true
-                    }
-
-                    TopBarRadioButton {
-                        id: unratedRadio
-
-                        text: "Unrated"
-                        visible: root.filter === Filters.CATEGORY_FILTER_INDEX
-                        anchors.verticalCenter: parent.verticalCenter
-                        exclusiveGroup: checkedInputGroup
-                        onCheckedChanged: if (checked) root.rated = false
-                    }
-                }
-            }
-
-            Component.onCompleted: {
-                crateSelect.refresh()
-                categorySelect.refresh()
-            }
+            verticalCenter: parent.verticalCenter
+            left: parent.left
         }
 
         Row {
-            anchors.centerIn: parent
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 1
+            spacing: 10
 
-            Repeater {
-                model: ["List", "Rate"]
+            TopBarComboBox {
+                id: crateSelect
 
-                delegate: Rectangle {
-                    property bool selected: index === root.activeTab
-                    width: 70
-                    height: 25
-                    radius: 4
-                    color: selected ? Theme.SelectedColor : mouseArea.containsMouse ? Theme.PressedColor : "transparent"
+                iconSource: "qrc:/images/crate_16x16_white.png"
 
-                    SharpText {
-                        anchors.centerIn: parent
-                        color: selected ? Theme.SelectedTextColor : mouseArea.containsMouse ? Theme.PressedTextColor : Theme.ButtonTextColor
-                        text: modelData
-                    }
+                anchors.verticalCenter: parent.verticalCenter
 
-                    MouseArea {
-                        id: mouseArea
-                        anchors.fill: parent
-                        cursorShape: "PointingHandCursor"
-                        onClicked: {
-                            root.tabSelected(index)
-                            root.activeTab = index
+                function select(crate) {
+                    for (var i = 0; i < model.count; ++i) {
+                        if (model.get(i).Name === crate) {
+                            currentIndex = i
+                            break
                         }
+                    }
+                }
+
+                function refresh() {
+                    var currentItem = currentText
+                    model.clear()
+                    currentIndex = -1
+
+                    Database.getCrates(function(crates) {
+                        for (var i = 0; i < crates.length; ++i) {
+                            var name = crates.item(i).Name
+                            crateSelect.model.append({text: crates.item(i).Name, Name: name, CrateId: crates.item(i).CrateId})
+                        }
+
+                        if (currentItem) {
+                            select(currentItem)
+                        } else {
+                            currentIndex = 0
+                        }
+                    })
+                }
+
+                model: ListModel {}
+                width: 160
+
+                onCurrentIndexChanged: root.crate = model.get(currentIndex)
+            }
+
+            TopBarComboBox {
+                id: categorySelect
+
+                visible: root.activeTab === 1
+                anchors.verticalCenter: parent.verticalCenter
+                iconSource: "qrc:/images/tag_16x16_white.png"
+
+                function select(name) {
+                    for (var i = 0; i < model.count; ++i) {
+                        if (name === model.get(i).Name) {
+                            currentIndex = i
+                            break
+                        }
+                    }
+                }
+
+                function refresh() {
+                    var currentItem = categorySelect.currentText
+                    categorySelect.model.clear()
+                    categorySelect.currentIndex = -1
+
+                    Database.getCategories(function(categories) {
+                        for (var i = 0; i < categories.length; ++i) {
+                            var item = categories.item(i)
+                            var name = item.Name
+                            var id = item.CategoryId
+
+                            categorySelect.model.append({
+                                                            modelData: name,
+                                                            text: name,
+                                                            Name: name,
+                                                            CategoryId: id
+                                                        })
+                        }
+
+                        if (categories.length === 0) {
+                            return root.noCategories()
+                        }
+
+                        if (currentItem) {
+                            select(currentItem)
+                        } else {
+                            currentIndex = 0
+                        }
+                    })
+                }
+                onCurrentIndexChanged: root.category = model.get(currentIndex)
+
+                model: ListModel {}
+                width: 160
+            }
+
+            ExclusiveGroup {
+                id: checkedInputGroup
+            }
+
+            Row {
+                id: ratedUnratedSelect
+
+                spacing: 1
+                TopBarRadioButton {
+                    id: ratedRadio
+
+                    text: "Rated"
+                    checked: true
+                    anchors.verticalCenter: parent.verticalCenter
+                    exclusiveGroup: checkedInputGroup
+                    onCheckedChanged: if (checked) root.rated = true
+                }
+
+                TopBarRadioButton {
+                    id: unratedRadio
+
+                    text: "Unrated"
+                    anchors.verticalCenter: parent.verticalCenter
+                    exclusiveGroup: checkedInputGroup
+                    onCheckedChanged: if (checked) root.rated = false
+                }
+            }
+        }
+
+        Component.onCompleted: {
+            crateSelect.refresh()
+            categorySelect.refresh()
+        }
+    }
+
+    Row {
+        property int minimumWidth: 800 // TODO: get width from rows
+        anchors.centerIn: parent.width > minimumWidth ? parent : undefined
+        anchors.left: parent.width > minimumWidth ? undefined : rows.right
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.margins: 20
+        spacing: 1
+
+        Repeater {
+            model: ["List", "Rate"]
+
+            delegate: Rectangle {
+                property bool selected: index === root.activeTab
+                width: 70
+                height: 25
+                radius: 4
+                color: selected ? Theme.SelectedColor : mouseArea.containsMouse ? Theme.PressedColor : "transparent"
+
+                SharpText {
+                    anchors.centerIn: parent
+                    color: selected ? Theme.SelectedTextColor : mouseArea.containsMouse ? Theme.PressedTextColor : Theme.ButtonTextColor
+                    text: modelData
+                }
+
+                MouseArea {
+                    id: mouseArea
+                    anchors.fill: parent
+                    cursorShape: "PointingHandCursor"
+                    onClicked: {
+                        root.tabSelected(index)
+                        root.activeTab = index
                     }
                 }
             }

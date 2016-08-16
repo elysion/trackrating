@@ -15,43 +15,27 @@ Item {
     id: root
 
     property alias model: list.model
-    property alias title: titleText.text
+    property alias title: title.text
     property int currentIndex: -1
-    
-    Item {
+    property int maxHeight: 100
+    property bool collapsed: false
+
+    height: childrenRect.height
+
+    FilterListTitle {
         id: title
-        
-        height: 30
-        
+
+        arrow: root.collapsed ? Qt.UpArrow : Qt.DownArrow
+
         anchors {
             top: parent.top
             left: parent.left
             right: parent.right
         }
-        
-        SharpText {
-            id: titleText
-            
-            anchors {
-                verticalCenter: parent.verticalCenter
-                leftMargin: 12
-                left: parent.left
-            }
-            
-            color: "#636363"
-            font.pointSize: 11
-        }
-        
-        SharpText {
-            text: "⌄"
-            color: "#636363"
-            font.pointSize: 20
-            anchors {
-                left: titleText.right
-                verticalCenter: parent.verticalCenter
-                verticalCenterOffset: -2
-                leftMargin: 4
-            }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.collapsed = !root.collapsed
         }
     }
     
@@ -62,36 +46,17 @@ Item {
             left: parent.left
             right: parent.right
             top: title.bottom
-            bottom: parent.bottom
         }
-        
-        height: 200
-        
-        delegate: Rectangle {
-            height: 24
-            color: index === root.currentIndex ? '#dddddd' : 'transparent'
 
-            anchors {
-                left: parent.left
-                right: parent.right
-            }
+        visible: !root.collapsed
+        height: root.collapsed ? 0 : contentHeight > maxHeight ? maxHeight : contentHeight
+                
+        delegate: FilterListItem {
+            id: filterListItem
 
-            Text {
-                text: modelData
-                color: "#272727"
-
-                anchors {
-                    verticalCenter: parent.verticalCenter
-                    left: parent.left
-                    leftMargin: 16
-                }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-
-                onClicked: root.currentIndex = index
-            }
+            text: modelData
+            selected: index === root.currentIndex
+            onClicked: root.currentIndex = index
         }
         
         model: ListModel {}
