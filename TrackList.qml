@@ -68,7 +68,6 @@ Item {
         focus: true
 
         style: TableViewStyle {
-            alternateBackgroundColor: Theme.AlternateRowColor
             backgroundColor: Theme.RowColor
             highlightedTextColor: Theme.SelectedTextColor
             textColor: Theme.TextColor
@@ -76,8 +75,20 @@ Item {
 
             rowDelegate: Rectangle {
                 height: 30
-                color: styleData.selected ? Theme.SelectedColor :
-                         !styleData.alternate ? alternateBackgroundColor : backgroundColor
+                color: styleData.selected ? Theme.SelectedColor : backgroundColor
+                Rectangle {
+                    visible: !styleData.selected
+                    anchors {
+                        left: parent.left
+                        leftMargin: 5
+                        right: parent.right
+                        rightMargin: 5
+                        bottom: parent.bottom
+                    }
+
+                    height: 1
+                    color: "#ececec"
+                }
             }
 
             frame: Rectangle {

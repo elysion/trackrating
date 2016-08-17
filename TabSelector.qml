@@ -13,13 +13,11 @@ import "filters.js" as Filters
 Rectangle {
     id: root
 
-    property int activeTab
-    signal tabSelected(int tab)
-
+    property int activeTab: 0
     property variant crate: ({})
     property variant category: ({})
     property bool rated: true
-    property alias showRatedUnratedSelect: ratedUnratedSelect.visible
+    property bool showRatedUnratedSelect
 
     signal noCategories
     signal noTags
@@ -54,9 +52,18 @@ Rectangle {
     }
 
     function refresh() {
-        selectRated(false)
         crateSelect.refresh()
-        crateSelect.currentIndex = 0
+        categorySelect.refresh()
+    }
+
+    Rectangle {
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+        height: 1
+        color: "#e4e4e4"
     }
 
     RowLayout {
@@ -170,6 +177,8 @@ Rectangle {
             Row {
                 id: ratedUnratedSelect
 
+                visible: root.showRatedUnratedSelect && root.activeTab === 0
+
                 spacing: 1
                 TopBarRadioButton {
                     id: ratedRadio
@@ -227,7 +236,6 @@ Rectangle {
                     anchors.fill: parent
                     cursorShape: "PointingHandCursor"
                     onClicked: {
-                        root.tabSelected(index)
                         root.activeTab = index
                     }
                 }

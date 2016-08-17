@@ -74,7 +74,7 @@ Rectangle {
         bottom: parent.bottom
     }
     
-    color: "#f6f6f6"
+    color: "#e6e6e6"
     width: 200
 
     FilterListItem {

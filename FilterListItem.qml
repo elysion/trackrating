@@ -19,7 +19,7 @@ Rectangle {
     signal clicked()
     
     height: 24
-    color: root.selected ? '#dddddd' : 'transparent'
+    color: root.selected ? '#cccccc' : 'transparent'
     
     anchors {
         left: parent.left

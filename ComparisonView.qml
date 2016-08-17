@@ -21,10 +21,11 @@ Item {
         root.rated = rated
     }
 
+    // TODO: what to do when user changes category in the tab selector while rating tracks in another category?
+
     property variant unrated
     property variant rated
     property bool playing
-
     property variant category: ({})
     property variant crate: ({})
     property string currentTrackLocation: ""
@@ -110,34 +111,70 @@ Item {
         })
     }
     
-    SharpText {
-        id: header
+    Item {
+        visible: !root.rated || !root.unrated
 
-        anchors {
-            top: parent.top
-            topMargin: 10
-            horizontalCenter: parent.horizontalCenter
+        anchors.fill: parent
+
+        Button {
+            id: startRating
+
+            anchors {
+                top: parent.top
+                topMargin: 10
+                horizontalCenter: parent.horizontalCenter
+            }
+
+            // TODO: Replace button with select category hint when all tracks in currently selected category are rated
+            // TODO: needs to be checked every time the category is changed
+            text: "Start rating tracks in the \"" + root.crate.Name + "\" crate in terms of \"" + root.category.Name + "\""
+
+            onClicked: {
+                var categoryId = root.category.CategoryId
+                var crateId = root.crate.CrateId
+
+                Database.getUnratedTracksFor(categoryId, crateId, null, function(unrated) {
+                    startComparison(unrated[0], category, crate)
+                })
+            }
         }
-
-        font.pointSize: 20
-        text: "Rate tracks in terms of \"" + root.category.Name + "\""
     }
 
-    TrackComparison {
-        id: grid
+    Item {
+        visible: !!root.rated && !!root.unrated
 
-        comparisonTerm: root.category.Name
-        currentTrackLocation: root.currentTrackLocation
-        playing: root.playing
+        anchors.fill: parent
 
-        anchors {
-            top: header.top
-            bottom: parent.bottom
-            left: parent.left
-            right: parent.right
+        SharpText {
+            id: header
+
+            anchors {
+                top: parent.top
+                topMargin: 10
+                horizontalCenter: parent.horizontalCenter
+            }
+
+            font.pointSize: 20
+            // TODO: still does not work
+            text: "Rate tracks in the \"" + root.crate.Name + "\" crate in terms of \"" + root.category.Name + "\""
         }
 
-        onTrackClicked: root.trackClicked(track)
-        onTrackRated: rateTrack(track, isMoreThan, comparison)
-    }   
+        TrackComparison {
+            id: grid
+
+            comparisonTerm: root.category.Name
+            currentTrackLocation: root.currentTrackLocation
+            playing: root.playing
+
+            anchors {
+                top: header.top
+                bottom: parent.bottom
+                left: parent.left
+                right: parent.right
+            }
+
+            onTrackClicked: root.trackClicked(track)
+            onTrackRated: rateTrack(track, isMoreThan, comparison)
+        }
+    }
 }

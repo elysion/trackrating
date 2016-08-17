@@ -35,7 +35,7 @@ ApplicationWindow {
 
         onResultReady: {
             Database.addTrack(trackInfo.artist, trackInfo.title, trackInfo.filename, trackInfo.url, crateId)
-            tabSelector.updateList()
+            listTab.updateList()
             processed++
             statusNotification.update('Processing: ' + (processed + 1) + '/' + total)
 
@@ -56,6 +56,8 @@ ApplicationWindow {
     }
 
     function addFolder(folder) {
+        // TODO: show overlay when importing files in folder
+        // TODO: hangs on import
         var tracks = filesInFolderProvider.getFiles(folder)
         addTracks(tracks)
     }
@@ -155,7 +157,7 @@ ApplicationWindow {
             firstCategory = false
             Database.createCategory(queryResult)
             tabSelector.refresh()
-            tabSelector.selectCategory(queryResult)
+            filtersColumn.refresh()
             queryResult = ""
         }
     }
@@ -166,7 +168,6 @@ ApplicationWindow {
         onAccepted: {
             Database.createCrate(queryResult)
             tabSelector.refresh()
-            tabSelector.selectCrateFilter()
             tabSelector.selectCrate(queryResult)
             queryResult = ""
             trackListModel.refresh()
@@ -295,12 +296,17 @@ ApplicationWindow {
                 if (tag) {
                     Database.addTag(player.track, tag)
                     player.updateTags()
-                    tabSelector.updateList()
+                    listTab.updateList()
+                    filtersColumn.refresh()
                 }
             }
 
             onPlaybackStarted: {
                 rateTab.startDelayedPlaybackPositionRestore()
+            }
+
+            onTagRemoved: {
+                listTab.updateList()
             }
         }
 
@@ -326,8 +332,6 @@ ApplicationWindow {
                 right: parent.right
             }
 
-            activeTab: tabs.activeTab
-            onTabSelected: tabs.activeTab = tab
             showRatedUnratedSelect: false
 
             height: 40
@@ -337,25 +341,10 @@ ApplicationWindow {
                 newCategoryDialog.open()
             }
 
-            onCrateChanged: updateList()
+            onCrateChanged: listTab.updateList()
+            onRatedChanged: listTab.updateList()
 
-            function updateList() {
-                if (crate === undefined) return
-
-                var crateId = crate && crate.CrateId
-                Database.getAllTracksFor(crateId, showTracks)
-
-                function addIndexToTracks(tracks) {
-                    tracks.map(function (track, index) {
-                        track['Index'] = index + 1
-                    })
-                }
-
-                function showTracks(tracks) {
-                    addIndexToTracks(tracks)
-                    trackListModel.showTracksFromDbResults(tracks)
-                }
-            }
+            Component.onCompleted: refresh()
         }
 
         Item {
@@ -368,13 +357,7 @@ ApplicationWindow {
                 bottom: parent.bottom
             }
 
-            property int activeTab: 0
-
-            onActiveTabChanged: {
-                if (activeTab === 0) {
-                    tabSelector.updateList()
-                }
-            }
+            property int activeTab: tabSelector.activeTab
 
             Action {
                 id: exportAction
@@ -382,24 +365,22 @@ ApplicationWindow {
                 shortcut: "Ctrl+E"
                 onTriggered: {
                     // TODO: use filtersColumn
-                    var isCategorySelected = tabSelector.filter == Filters.CATEGORY_FILTER_INDEX
+                    var category = filtersColumn.category
+                    var tag = filtersColumn.tag
+                    var crate = tabSelector.crate
 
                     var filenameParts
 
-                    switch (tabSelector.filter) {
-                        case Filters.CATEGORY_FILTER_INDEX:
-                            filenameParts = [tabSelector.category.Name,
-                                (tabSelector.rated ? "Rated" : "Unrated")]
-                            break
-                        case Filters.TAG_FILTER_INDEX:
-                            filenameParts = [tabSelector.tag.Name]
-                        break
-                        default:
-                            filenameParts = ["All"]
-                        break
+                    if (category && category.Name) {
+                        filenameParts = [category.Name,
+                            (tabSelector.rated ? "Rated" : "Unrated")]
+                    } else if (tag && tag.Name) {
+                        filenameParts = [tag.Name]
+                    } else {
+                        filenameParts = ["All"]
                     }
 
-                    exportPlaylistDialog.filename = [tabSelector.crate.Name, filenameParts.join("_")].join("_") + ".m3u"
+                    exportPlaylistDialog.filename = [crate.Name, filenameParts.join("_")].join("_") + ".m3u"
 
                     exportPlaylistDialog.open()
                 }
@@ -412,6 +393,38 @@ ApplicationWindow {
 
                 visible: tabs.activeTab === 0
 
+                function updateList() {
+                    var crateId = tabSelector.crate.CrateId
+                    var tagId = tag && tag.TagId
+                    var categoryId = category && category.CategoryId
+                    var rated = tabSelector.rated
+
+                    if (!tagId && !categoryId) {
+                        Database.getAllTracksFor(crateId, showTracks)
+                    }
+
+                    if (categoryId) {
+                        if (rated) {
+                            Database.getRatedTracksFor(categoryId, crateId, showTracks)
+                        } else {
+                            Database.getUnratedTracksFor(categoryId, crateId, null, showTracks)
+                        }
+                    } else if (tagId) {
+                        Database.getTaggedTracksFor(tagId, crateId, showTracks)
+                    }
+
+                    function addIndexToTracks(tracks) {
+                        tracks.map(function (track, index) {
+                            track['Index'] = index + 1
+                        })
+                    }
+
+                    function showTracks(tracks) {
+                        addIndexToTracks(tracks)
+                        trackListModel.showTracksFromDbResults(tracks)
+                    }
+                }
+
                 FiltersColumn {
                     id: filtersColumn
 
@@ -419,48 +432,26 @@ ApplicationWindow {
                         tabSelector.showRatedUnratedSelect = !!category
 
                         if (!category) return
-                        updateList()
+                        listTab.updateList()
                     }
 
                     onTagChanged: {
                         tabSelector.showRatedUnratedSelect = !!category
 
                         if (!tag) return
-                        updateList()
-                    }
-
-                    function updateList() {
-                        var crateId = tabSelector.crate.CrateId
-                        var tagId = tag && tag.TagId
-                        var categoryId = category && category.CategoryId
-                        var rated = tabSelector.rated
-
-                        if (!tagId && !categoryId) {
-                            Database.getAllTracksFor(crateId, showTracks)
-                        }
-
-                        if (categoryId) {
-                            if (rated) {
-                                Database.getRatedTracksFor(categoryId, crateId, showTracks)
-                            } else {
-                                Database.getUnratedTracksFor(categoryId, crateId, null, showTracks)
-                            }
-                        } else if (tagId) {
-                            Database.getTaggedTracksFor(tagId, crateId, showTracks)
-                        }
-
-                        function addIndexToTracks(tracks) {
-                            tracks.map(function (track, index) {
-                                track['Index'] = index + 1
-                            })
-                        }
-
-                        function showTracks(tracks) {
-                            addIndexToTracks(tracks)
-                            trackListModel.showTracksFromDbResults(tracks)
-                        }
+                        listTab.updateList()
                     }
                 }
+
+                property alias crate: tabSelector.crate
+                property alias rated: tabSelector.rated
+                property alias category: filtersColumn.category
+                property alias tag: filtersColumn.tag
+
+                onCrateChanged: updateList()
+                onRatedChanged: updateList()
+                onCategoryChanged: updateList()
+                onTagChanged: updateList()
 
                 TrackList {
                     id: trackList
@@ -479,8 +470,7 @@ ApplicationWindow {
                     model: trackListModel
 
                     Component.onCompleted: {
-                        tabSelector.refresh()
-                        tabSelector.updateList()
+                        listTab.updateList()
                         importOverlay.refresh()
                     }
 
@@ -501,7 +491,8 @@ ApplicationWindow {
                             Database.removeTrack(track.TrackId, crate.CrateId)
                         })
 
-                        tabSelector.updateList()
+                        tabSelector.refresh()
+                        listTab.updateList()
                         event.accepted = true
                     }
 
@@ -564,7 +555,7 @@ ApplicationWindow {
                             onTriggered: {
                                 Database.removeTrack(contextMenuTrigger.selectedTrackProxy.TrackId,
                                                      contextMenuTrigger.selectedTrackProxy.CrateId)
-                                tabSelector.updateList()
+                                listTab.updateList()
                             }
                         }
                     }
@@ -595,6 +586,9 @@ ApplicationWindow {
                 property int playbackStartPosition: 100000
                 property int unratedPosition: playbackStartPosition
                 property int ratedPosition: playbackStartPosition
+
+                crate: tabSelector.crate
+                category: tabSelector.category
 
                 onRatedChanged: ratedPosition = playbackStartPosition
                 onUnratedChanged: unratedPosition = playbackStartPosition
@@ -627,9 +621,11 @@ ApplicationWindow {
                 }
 
                 onAllTracksRated: {
-                    tabSelector.updateList()
+                    tabSelector.refresh()
+                    listTab.updateList()
                     tabSelector.selectRated(true)
-                    tabs.activeTab = 0
+                    tabSelector.activeTab = 0
+                    filtersColumn.category = tabSelector.category
                 }
 
                 onTrackClicked: player.play(track)
@@ -681,6 +677,7 @@ ApplicationWindow {
             onDropped: {
                 if (drop.hasUrls) {
                     root.addTracks(drop.urls)
+                    drop.accepted = true
                 }
             }
         }

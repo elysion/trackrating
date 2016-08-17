@@ -17,6 +17,9 @@ Item {
     property alias muted: player.muted
 
     signal playbackStarted
+    signal tagRemoved()
+
+    onTagRemoved: root.updateTags()
 
     function moreTags() {
         tags.moreTags()
@@ -87,11 +90,10 @@ Item {
         }
     }
 
-
-    Image {
-        id: cover
-
-        width: height
+    Rectangle {
+        id: buttonRect
+        color: "black"
+        width: parent.height - buttons.height - buttons.anchors.margins * 2
 
         anchors {
             left: parent.left
@@ -99,16 +101,29 @@ Item {
             bottom: parent.bottom
         }
 
-        source: "image://cover/"+root.track.Location
-        smooth: true
+        Image {
+            id: cover
+
+            height: width
+
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: parent.top
+            }
+
+            source: "image://cover/"+root.track.Location
+            smooth: true
+            mipmap: true
+        }
 
         Row {
             id: buttons
 
             anchors {
-                horizontalCenter: parent.horizontalCenter
                 bottom: parent.bottom
-                bottomMargin: 10
+                horizontalCenter: parent.horizontalCenter
+                margins: 10
             }
 
             spacing: 10
@@ -145,7 +160,7 @@ Item {
         
         anchors {
             right: parent.right
-            left: cover.right
+            left: buttonRect.right
             top: parent.top
             bottom: parent.bottom
         }
@@ -191,7 +206,7 @@ Item {
         
         anchors {
             left: parent.left
-            right: cover.left
+            right: buttonRect.left
             verticalCenter: parent.verticalCenter
             leftMargin: 10
             rightMargin: 10
@@ -219,11 +234,11 @@ Item {
 
         anchors {
             right: parent.right
-            left: cover.right
+            left: buttonRect.right
             top: parent.top
         }
 
-        onTagRemoved: root.updateTags()
+        onTagRemoved: root.tagRemoved()
     }
 
     AddTagsView {
@@ -233,7 +248,7 @@ Item {
 
         anchors {
             right: parent.right
-            left: cover.right
+            left: buttonRect.right
             bottom: parent.bottom
         }
 
