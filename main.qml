@@ -178,12 +178,11 @@ ApplicationWindow {
         id: newTagDialog
 
         onAccepted: {
+            // TODO: Update track player tags
             Database.createTag(queryResult)
-            tabSelector.refresh()
-            tabSelector.selectTagFilter()
-            tabSelector.selectTag(queryResult)
+            // TODO: this does not clear the text
+            filtersColumn.refresh()
             queryResult = ""
-            trackListModel.refresh()
         }
     }
 

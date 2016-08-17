@@ -22,18 +22,6 @@ Rectangle {
     signal noCategories
     signal noTags
 
-    function selectCategoryFilter() {
-        filterSelect.currentIndex = Filters.CATEGORY_FILTER_INDEX
-    }
-
-    function selectTagFilter() {
-        filterSelect.currentIndex = Filters.TAG_FILTER_INDEX
-    }
-
-    function selectNoFilter() {
-        filterSelect.currentIndex = Filters.NO_FILTER_INDEX
-    }
-
     function selectRated(rated) {
         if (rated) ratedRadio.checked = true
         else unratedRadio.checked = true
@@ -45,10 +33,6 @@ Rectangle {
 
     function selectCategory(name) {
         categorySelect.select(name)
-    }
-
-    function selectTag(name) {
-        tagSelect.select(name)
     }
 
     function refresh() {

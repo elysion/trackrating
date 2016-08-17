@@ -17,6 +17,8 @@ Item {
 
     onTrackChanged: root.offset = 0
 
+    // TODO: moreTags again broken: does not return to the previous set if there is only one tag in the open set
+    // TODO: also what happens if the last tag of the set is added to the track? the set should be refreshed automatically
     function moreTags() {
         Database.getTags(function (tags) {
             if (offset + root.model.length >= tags.length - 1) {

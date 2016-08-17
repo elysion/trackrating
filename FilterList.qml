@@ -22,6 +22,16 @@ Item {
 
     height: childrenRect.height
 
+    function select(name) {
+        for (var i = 0; i < model.count; ++i) {
+            var itemAtIndex = model.get(i)
+            if (name === itemAtIndex.Name) {
+                root.currentIndex = i
+                break
+            }
+        }
+    }
+
     FilterListTitle {
         id: title
 

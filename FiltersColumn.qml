@@ -20,52 +20,8 @@ Rectangle {
     property variant category
 
     function refresh() {
-        var list = tagsList
-        //                    var currentItem = ...
-        list.model.clear()
-
-        Database.getTags(function(tags) {
-            for (var i = 0; i < tags.length; ++i) {
-                var item = tags[i]
-                var id = item.TagId
-                var name = item.Name
-                list.model.append({
-                                      modelData: name,
-                                      text: name,
-                                      Name: name,
-                                      TagId: id
-                                  })
-            }
-
-            //                        if (currentItem) {
-            //                            select(currentItem)
-            //                        } else {
-            //                            currentIndex = 0
-            //                        }
-        })
-
-        list = categoriesList
-        list.model.clear()
-
-        Database.getCategories(function(categories) {
-            for (var i = 0; i < categories.length; ++i) {
-                var item = categories[i]
-                var id = item.CategoryId
-                var name = item.Name
-                list.model.append({
-                                      modelData: name,
-                                      text: name,
-                                      Name: name,
-                                      CategoryId: id
-                                  })
-            }
-
-            //                        if (currentItem) {
-            //                            select(currentItem)
-            //                        } else {
-            //                            currentIndex = 0
-            //                        })
-        })
+        categoriesList.refresh()
+        tagsList.refresh()
     }
 
     anchors {
@@ -103,6 +59,7 @@ Rectangle {
         id: categoriesList
 
         title: "Categories"
+        maxHeight: parent.height / 2 - allTracks.height
 
         anchors {
             left: parent.left
@@ -118,20 +75,10 @@ Rectangle {
             root.category = model.get(currentIndex)
         }
 
-
-        function select(name) {
-            for (var i = 0; i < model.count; ++i) {
-                if (name === model.get(i).Name) {
-                    currentIndex = i
-                    break
-                }
-            }
-        }
-
         function refresh() {
-            var currentItem = categorySelect.currentText
-            categorySelect.model.clear()
-            categorySelect.currentIndex = -1
+            var list = categoriesList
+            var currentItem = root.category && root.category.Name
+            list.model.clear()
 
             Database.getCategories(function(categories) {
                 for (var i = 0; i < categories.length; ++i) {
@@ -139,7 +86,7 @@ Rectangle {
                     var name = item.Name
                     var id = item.CategoryId
 
-                    categorySelect.model.append({
+                    list.model.append({
                                                     modelData: name,
                                                     text: name,
                                                     Name: name,
@@ -147,14 +94,8 @@ Rectangle {
                                                 })
                 }
 
-                if (categories.length === 0) {
-                    return root.noCategories()
-                }
-
                 if (currentItem) {
                     select(currentItem)
-                } else {
-                    currentIndex = 0
                 }
             })
         }
@@ -166,6 +107,7 @@ Rectangle {
         id: tagsList
 
         title: "Tags"
+        maxHeight: parent.height / 2 - allTracks.height
 
         anchors {
             left: parent.left
@@ -173,42 +115,26 @@ Rectangle {
             top: categoriesList.bottom
         }
 
-        function select(name) {
-            for (var i = 0; i < model.count; ++i) {
-                if (name === model.get(i).Name) {
-                    currentIndex = i
-                    break
-                }
-            }
-        }
-
         function refresh() {
-            var select = tagSelect
-            var currentItem = select.currentText
-            select.model.clear()
-            select.currentIndex = -1
+            var list = tagsList
+            var currentItem = root.tag && root.tag.Name
+            list.model.clear()
 
             Database.getTags(function(tags) {
                 for (var i = 0; i < tags.length; ++i) {
                     var item = tags[i]
                     var id = item.TagId
                     var name = item.Name
-                    select.model.append({
-                                            modelData: name,
-                                            text: name,
-                                            Name: name,
-                                            TagId: id
-                                        })
-                }
-
-                if (tags.length === 0) {
-                    return root.noTags()
+                    list.model.append({
+                                          modelData: name,
+                                          text: name,
+                                          Name: name,
+                                          TagId: id
+                                      })
                 }
 
                 if (currentItem) {
                     select(currentItem)
-                } else {
-                    currentIndex = 0
                 }
             })
         }
