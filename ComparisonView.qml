@@ -11,24 +11,52 @@ Item {
     id: root
     anchors.fill: parent
 
-    signal allTracksRated
     signal trackRated(variant track)
     signal trackClicked(variant track)
     signal comparingTracks(variant unrated, variant rated)
 
     onComparingTracks: {
+        root.rating = true
         root.unrated = unrated
         root.rated = rated
     }
 
+    onAllTracksRatedChanged: {
+        if (allTracksRated)
+            root.rating = false
+    }
+
     // TODO: what to do when user changes category in the tab selector while rating tracks in another category?
 
+    property bool rating: false
     property variant unrated
     property variant rated
     property bool playing
     property variant category: ({})
     property variant crate: ({})
     property string currentTrackLocation: ""
+    property bool allTracksRated: false
+
+    onCrateChanged: updateAllTracksRatedStatus()
+    onCategoryChanged: updateAllTracksRatedStatus()
+
+    function updateAllTracksRatedStatus() {
+        Database.getUnratedTracksFor(root.category.CategoryId, root.crate.CrateId, null, function (unratedTracks) {
+            root.allTracksRated = unratedTracks.length === 0
+        })
+    }
+
+    function startRating(crate, category) {
+        root.category = category
+        root.crate = crate
+
+        var categoryId = root.category.CategoryId
+        var crateId = root.crate.CrateId
+
+        Database.getUnratedTracksFor(categoryId, crateId, null, function(unratedTracks) {
+            startComparison(unratedTracks[0], category, crate)
+        })
+    }
 
     function contains(object, value) {
         for (var key in object) {
@@ -39,9 +67,14 @@ Item {
     }
 
     function startComparison(unrated, category, crate) {
+        root.category = category
+        root.crate = crate
+
         var trackId = unrated.TrackId
         var categoryId = category.CategoryId
         var crateId = crate.CrateId
+
+        root.allTracksRated = false
 
         Database.resetRating(trackId, categoryId, crateId)
         Database.ensureRatingExists(trackId, categoryId, crateId)
@@ -58,6 +91,8 @@ Item {
         var categoryId = category.CategoryId
         var crateId = crate.CrateId
         var unratedTrackId = unrated.TrackId
+
+        root.allTracksRated = false
 
         Database.getNextComparisonId(unrated.TrackId, null, categoryId, crateId, function(nextId) {
             if (nextId === null) {
@@ -110,35 +145,6 @@ Item {
             }
         })
     }
-    
-    Item {
-        visible: !root.rated || !root.unrated
-
-        anchors.fill: parent
-
-        Button {
-            id: startRating
-
-            anchors {
-                top: parent.top
-                topMargin: 10
-                horizontalCenter: parent.horizontalCenter
-            }
-
-            // TODO: Replace button with select category hint when all tracks in currently selected category are rated
-            // TODO: needs to be checked every time the category is changed
-            text: "Start rating tracks in the \"" + root.crate.Name + "\" crate in terms of \"" + root.category.Name + "\""
-
-            onClicked: {
-                var categoryId = root.category.CategoryId
-                var crateId = root.crate.CrateId
-
-                Database.getUnratedTracksFor(categoryId, crateId, null, function(unrated) {
-                    startComparison(unrated[0], category, crate)
-                })
-            }
-        }
-    }
 
     Item {
         visible: !!root.rated && !!root.unrated
@@ -162,7 +168,7 @@ Item {
         TrackComparison {
             id: grid
 
-            comparisonTerm: root.category.Name
+            comparisonTerm: (root.category && root.category.Name) || ''
             currentTrackLocation: root.currentTrackLocation
             playing: root.playing
 

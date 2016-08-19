@@ -16,7 +16,7 @@ Rectangle {
 
     property alias text: text.text
     property bool selected: false
-    signal clicked()
+    signal clicked(variant mouse)
     
     height: 24
     color: root.selected ? '#cccccc' : 'transparent'
@@ -39,6 +39,7 @@ Rectangle {
     
     MouseArea {
         anchors.fill: parent
-        onClicked: root.clicked()
+        onClicked: root.clicked(mouse)
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
     }
 }

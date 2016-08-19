@@ -96,42 +96,31 @@ Item {
             }
 
             headerDelegate: Rectangle {
-                    height: 30
+                height: 30
 
-                    SharpText {
-                        id: textItem
-                        anchors.fill: parent
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: styleData.textAlignment
-                        anchors.leftMargin: horizontalAlignment === Text.AlignLeft ? 12 : 1
-                        anchors.rightMargin: horizontalAlignment === Text.AlignRight ? 8 : 1
-                        text: styleData.value
-                        elide: Text.ElideRight
-                        color: textColor
-                    }
-                    Rectangle {
-                        anchors {
-                            right: parent.right
-                            top: parent.top
-                            bottom: parent.bottom
-                            topMargin: 2
-                            bottomMargin: 2
-                        }
-
-                        width: 1
-                        color: "#e6e6e6"
-                    }
-                    Rectangle {
-                        anchors {
-                            right: parent.right
-                            left: parent.left
-                            bottom: parent.bottom
-                        }
-
-                        height: 1
-                        color: "#e6e6e6"
-                    }
+                SharpText {
+                    id: textItem
+                    anchors.fill: parent
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: styleData.textAlignment
+                    anchors.leftMargin: horizontalAlignment === Text.AlignLeft ? 12 : 1
+                    anchors.rightMargin: horizontalAlignment === Text.AlignRight ? 8 : 1
+                    text: styleData.value
+                    elide: Text.ElideRight
+                    color: textColor
                 }
+
+                Rectangle {
+                    anchors {
+                        right: parent.right
+                        left: parent.left
+                        bottom: parent.bottom
+                    }
+
+                    height: 1
+                    color: "#e6e6e6"
+                }
+            }
         }
     }
 }

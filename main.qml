@@ -332,6 +332,11 @@ ApplicationWindow {
             }
 
             showRatedUnratedSelect: false
+            showStartRatingButton: activeTab === 1 &&
+                                   (!rateTab.rating ||
+                                    crate.CrateId !== rateTab.crate.CrateId ||
+                                    !category || !rateTab.category ||
+                                    category.CategoryId !== rateTab.category.CategoryId)
 
             height: 40
 
@@ -342,6 +347,7 @@ ApplicationWindow {
 
             onCrateChanged: listTab.updateList()
             onRatedChanged: listTab.updateList()
+            onStartRatingClicked: rateTab.startRating(crate, category)
 
             Component.onCompleted: refresh()
         }
@@ -363,7 +369,6 @@ ApplicationWindow {
                 text: "&Export"
                 shortcut: "Ctrl+E"
                 onTriggered: {
-                    // TODO: use filtersColumn
                     var category = filtersColumn.category
                     var tag = filtersColumn.tag
                     var crate = tabSelector.crate
@@ -393,6 +398,8 @@ ApplicationWindow {
                 visible: tabs.activeTab === 0
 
                 function updateList() {
+                    if (!crate || !(tag || category)) return
+
                     var crateId = tabSelector.crate.CrateId
                     var tagId = tag && tag.TagId
                     var categoryId = category && category.CategoryId
@@ -439,6 +446,13 @@ ApplicationWindow {
 
                         if (!tag) return
                         listTab.updateList()
+                    }
+
+                    onStartRating: {
+                        console.log('category', JSON.stringify(category))
+                        tabSelector.selectCategory(category.Name)
+                        tabSelector.activeTab = 1
+                        rateTab.startRating(tabSelector.crate, category)
                     }
                 }
 
@@ -534,8 +548,9 @@ ApplicationWindow {
                             onTriggered: {
                                 var track = contextMenuTrigger.selectedTrackProxy
                                 player.play(track)
-                                rateTab.startComparison(track, tabSelector.category, tabSelector.crate)
-                                tabs.activeTab = 1
+                                tabSelector.selectCategory(filtersColumn.category.Name)
+                                rateTab.startComparison(track, filtersColumn.category, tabSelector.crate)
+                                tabSelector.activeTab = 1
                             }
                         }
 
@@ -580,14 +595,11 @@ ApplicationWindow {
                 anchors.fill: parent
                 visible: tabs.activeTab === 1
                 focus: visible
-                currentTrackLocation: player.track.Location
+                currentTrackLocation: player.track.Location || ''
                 playing: player.playing
                 property int playbackStartPosition: 100000
                 property int unratedPosition: playbackStartPosition
                 property int ratedPosition: playbackStartPosition
-
-                crate: tabSelector.crate
-                category: tabSelector.category
 
                 onRatedChanged: ratedPosition = playbackStartPosition
                 onUnratedChanged: unratedPosition = playbackStartPosition
@@ -619,12 +631,14 @@ ApplicationWindow {
                     }
                 }
 
-                onAllTracksRated: {
-                    tabSelector.refresh()
-                    listTab.updateList()
-                    tabSelector.selectRated(true)
-                    tabSelector.activeTab = 0
-                    filtersColumn.category = tabSelector.category
+                onAllTracksRatedChanged: {
+                    if (allTracksRated) {
+                        tabSelector.refresh()
+                        listTab.updateList()
+                        tabSelector.selectRated(true)
+                        tabSelector.activeTab = 0
+                        filtersColumn.category = tabSelector.category
+                    }
                 }
 
                 onTrackClicked: player.play(track)

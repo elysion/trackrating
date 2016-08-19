@@ -18,9 +18,11 @@ Rectangle {
     property variant category: ({})
     property bool rated: true
     property bool showRatedUnratedSelect
+    property alias showStartRatingButton: startRatingButton.visible
 
     signal noCategories
     signal noTags
+    signal startRatingClicked
 
     function selectRated(rated) {
         if (rated) ratedRadio.checked = true
@@ -154,6 +156,36 @@ Rectangle {
                 width: 160
             }
 
+            Rectangle {
+                id: startRatingButton
+
+                anchors.verticalCenter: parent.verticalCenter
+
+                radius: 4
+                height: 22
+                width: 100
+
+                color: mouseArea.pressed ? Theme.PressedColor : "#838284"
+
+                // TODO: Replace button with select category hint when all tracks in currently selected category are rated
+                // TODO: needs to be checked every time the category is changed
+                Text {
+                    anchors.centerIn: parent
+                    color: 'white'
+                    text: "Start rating"
+                }
+
+                MouseArea {
+                    id: mouseArea
+                    hoverEnabled: true
+                    cursorShape: "PointingHandCursor"
+                    anchors.fill: parent
+                    onClicked: {
+                        root.startRatingClicked()
+                    }
+                }
+            }
+
             ExclusiveGroup {
                 id: checkedInputGroup
             }
@@ -192,11 +224,11 @@ Rectangle {
     }
 
     Row {
-        property int minimumWidth: 800 // TODO: get width from rows
+        property int minimumWidth: 1100 // TODO: get width from rows
         anchors.centerIn: parent.width > minimumWidth ? parent : undefined
         anchors.left: parent.width > minimumWidth ? undefined : rows.right
         anchors.verticalCenter: parent.verticalCenter
-        anchors.margins: 20
+        anchors.margins: 10
         spacing: 1
 
         Repeater {

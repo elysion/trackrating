@@ -20,6 +20,10 @@ Item {
     property int maxHeight: 100
     property bool collapsed: false
 
+    property bool enablePopup: false
+
+    signal startRating
+
     height: childrenRect.height
 
     function select(name) {
@@ -66,7 +70,24 @@ Item {
 
             text: modelData
             selected: index === root.currentIndex
-            onClicked: root.currentIndex = index
+            onClicked: {
+                if (mouse.button === Qt.LeftButton) {
+                    root.currentIndex = index
+                } else if (root.enablePopup) {
+                    popup.popup()
+                }
+            }
+
+            Menu {
+                id: popup
+                MenuItem {
+                    text: 'Start rating'
+                    onTriggered: {
+                        root.currentIndex = index
+                        root.startRating()
+                    }
+                }
+            }
         }
         
         model: ListModel {}

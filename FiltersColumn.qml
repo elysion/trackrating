@@ -19,6 +19,8 @@ Rectangle {
     property variant tag
     property variant category
 
+    signal startRating()
+
     function refresh() {
         categoriesList.refresh()
         tagsList.refresh()
@@ -60,6 +62,9 @@ Rectangle {
 
         title: "Categories"
         maxHeight: parent.height / 2 - allTracks.height
+        enablePopup: true
+
+        onStartRating: root.startRating()
 
         anchors {
             left: parent.left
